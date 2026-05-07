@@ -1,7 +1,7 @@
 # Contributing
 
 Thanks for the interest. This is a small repo with strong opinions —
-read [AGENTS.md](AGENTS.md) once before you start.
+read [AGENTS.md](../AGENTS.md) once before you start.
 
 ## Bootstrap
 
@@ -31,7 +31,7 @@ backend must be marked `@pytest.mark.smoke` and skipped when
 ## Releases
 
 Tag `vMAJOR.MINOR.PATCH` from `main`. The release workflow
-([release.yml](.github/workflows/release.yml)) builds the wheel and
+([release.yml](../.github/workflows/release.yml)) builds the wheel and
 opens a GitHub release with auto-generated notes. Bump
 `pyproject.toml` and `noxuslab/__init__.py` in the same commit.
 
@@ -39,4 +39,4 @@ opens a GitHub release with auto-generated notes. Bump
 
 - Bug or unexpected behaviour: open an issue with the *Bug* template.
 - Feature idea: open an issue with the *Feature* template before coding.
-- Security: email **luistunes@falnoa.com** — see [SECURITY.md](SECURITY.md).
+- Security: email **luistunes@falnoa.com** — see [security.md](security.md).

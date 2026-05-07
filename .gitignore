@@ -8,16 +8,28 @@
 # python
 __pycache__/
 *.py[cod]
+*$py.class
+*.egg
 *.egg-info/
+.eggs/
 .venv/
 venv/
+.python-version
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.pyright/
+.tox/
+.nox/
+.cache/
 .coverage
+.coverage.*
+coverage.xml
+*.cover
 htmlcov/
 dist/
 build/
+pip-wheel-metadata/
 
 # editors
 .vscode/*

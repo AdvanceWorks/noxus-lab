@@ -3,7 +3,7 @@
 
     python examples/02_run.py <workflow_id> [topic]
 
-Default topic is 'the Plan 9 operating system'. The workflow's run is
+Default topic is 'octopus cognition'. The workflow's run is
 async server-side; .wait() polls every 2s.
 """
 
@@ -17,7 +17,7 @@ if len(sys.argv) < 2:
     sys.exit("usage: python examples/02_run.py <workflow_id> [topic]")
 
 wid = sys.argv[1]
-topic = sys.argv[2] if len(sys.argv) > 2 else "the Plan 9 operating system"
+topic = sys.argv[2] if len(sys.argv) > 2 else "octopus cognition"
 
 load_dotenv()
 c = Client(

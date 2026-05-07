@@ -1,4 +1,4 @@
-"""noxuslab: a Ken Thompson-style sandbox and CLI for the Noxus AI SDK.
+"""noxuslab: a terse sandbox and CLI for the Noxus AI SDK.
 
 The package itself is intentionally tiny. Public surface:
 

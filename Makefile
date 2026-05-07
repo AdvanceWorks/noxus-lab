@@ -11,7 +11,7 @@ PY := .venv/bin/python
 NOXUSLAB := .venv/bin/noxuslab
 endif
 
-TOPIC ?= the Plan 9 operating system
+TOPIC ?= octopus cognition
 
 .PHONY: help setup hello run kb pull push lint fmt test typecheck clean
 

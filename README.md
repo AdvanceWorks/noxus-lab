@@ -70,8 +70,9 @@ VS Code config in [.vscode/mcp.json](.vscode/mcp.json). See
 - [docs/codegen.md](docs/codegen.md) — how `noxuslab pull` works, limits
 - [docs/mcp.md](docs/mcp.md) — MCP server quick start
 - [docs/publish.md](docs/publish.md) — git workflow for this repo
+- [docs/security.md](docs/security.md) — vulnerability reporting
+- [docs/contributing.md](docs/contributing.md) — dev loop, PR checklist
 - [AGENTS.md](AGENTS.md) — rules for AI assistants and contributors
-- [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md)
 
 ## layout
 
