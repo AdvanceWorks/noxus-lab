@@ -13,7 +13,7 @@ endif
 
 TOPIC ?= octopus cognition
 
-.PHONY: help setup hello run kb pull push lint fmt test typecheck clean
+.PHONY: help setup hello run kb pull push lint fmt test typecheck ci clean
 
 help:
 	@echo 'targets:'
@@ -27,6 +27,7 @@ help:
 	@echo '  fmt              ruff --fix + format'
 	@echo '  test             pytest'
 	@echo '  typecheck        pyright (warning-only)'
+	@echo '  ci               same as CI: lint + test (run before pushing)'
 	@echo '  clean            remove venv and caches'
 
 setup:
@@ -61,6 +62,8 @@ test:
 
 typecheck:
 	sh bin/typecheck
+
+ci: lint test
 
 clean:
 	sh bin/clean

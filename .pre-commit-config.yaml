@@ -21,3 +21,12 @@ repos:
     rev: v8.21.2
     hooks:
       - id: gitleaks
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (pre-push)
+        entry: sh bin/test
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true

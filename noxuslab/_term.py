@@ -1,7 +1,7 @@
 """Tiny ANSI helper. NO_COLOR-aware. Stdlib only.
 
-    from noxuslab._term import dim, bold, red
-    print(red("error:"), dim("file not found"))
+from noxuslab._term import dim, bold, red
+print(red("error:"), dim("file not found"))
 """
 
 import os

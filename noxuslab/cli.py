@@ -47,9 +47,7 @@ def _check_id(wid: str) -> None:
 def _next_example_path(name_slug: str) -> Path:
     EXAMPLES_DIR.mkdir(parents=True, exist_ok=True)
     used = [
-        int(m.group(1))
-        for p in EXAMPLES_DIR.glob("*.py")
-        if (m := re.match(r"^(\d{2})_", p.name))
+        int(m.group(1)) for p in EXAMPLES_DIR.glob("*.py") if (m := re.match(r"^(\d{2})_", p.name))
     ]
     nxt = (max(used) + 1) if used else 1
     return EXAMPLES_DIR / f"{nxt:02d}_{name_slug}.py"
@@ -79,9 +77,7 @@ def cmd_push(args: argparse.Namespace) -> int:
     if not path.is_file():
         raise BadFile(f"not found: {path}")
     src = path.read_text(encoding="utf-8")
-    src_no_save = re.sub(
-        r"^\s*print\(c\.workflows\.save\([^)]*\)\.id\)\s*$", "", src, flags=re.M
-    )
+    src_no_save = re.sub(r"^\s*print\(c\.workflows\.save\([^)]*\)\.id\)\s*$", "", src, flags=re.M)
     tmp = path.with_suffix(".__noxuslab_push.py")
     tmp.write_text(src_no_save, encoding="utf-8")
     try:
@@ -177,7 +173,11 @@ def main(argv: list[str] | None = None) -> int:
     if argv and argv[0] not in known and not argv[0].startswith("-"):
         guess = difflib.get_close_matches(argv[0], known, n=1)
         if guess:
-            print(red(f"unknown command: {argv[0]}"), dim(f"(did you mean '{guess[0]}'?)"), file=sys.stderr)
+            print(
+                red(f"unknown command: {argv[0]}"),
+                dim(f"(did you mean '{guess[0]}'?)"),
+                file=sys.stderr,
+            )
 
     args = p.parse_args(argv)
     try:

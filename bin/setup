@@ -16,5 +16,11 @@ fi
 "$vpy" -m pip install --upgrade pip
 "$vpy" -m pip install -e ".[dev]"
 
+# Wire git hooks so contributors run the same checks CI does.
+if [ -d .git ] && [ -x .venv/bin/pre-commit ] || [ -x .venv/Scripts/pre-commit.exe ]; then
+	"$vpy" -m pre_commit install --install-hooks >/dev/null 2>&1 || true
+	"$vpy" -m pre_commit install --hook-type pre-push >/dev/null 2>&1 || true
+fi
+
 [ -f .env ] || cp .env.example .env
 echo "ok. edit .env and set NOXUS_API_KEY."
