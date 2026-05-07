@@ -1,0 +1,41 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# editors
+.vscode/*
+!.vscode/mcp.json
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# os
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# notebooks
+.ipynb_checkpoints/
+
+# scratch
+runs/
+outputs/
+scratch/
+*.log

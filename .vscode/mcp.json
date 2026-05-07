@@ -1,0 +1,20 @@
+{
+  "inputs": [
+    {
+      "id": "noxus_api_key",
+      "type": "promptString",
+      "password": true,
+      "description": "Noxus API key (Settings -> Workspace -> API Keys)"
+    }
+  ],
+  "servers": {
+    "noxus": {
+      "command": "noxus",
+      "args": ["mcp", "serve"],
+      "env": {
+        "NOXUS_API_KEY": "${input:noxus_api_key}",
+        "NOXUS_BACKEND_URL": "https://backend.noxus.ai"
+      }
+    }
+  }
+}

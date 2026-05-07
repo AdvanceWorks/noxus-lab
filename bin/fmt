@@ -1,0 +1,14 @@
+#!/bin/sh
+# auto-fix lint and format
+set -eu
+
+if [ -x .venv/bin/ruff ]; then
+	ruff=.venv/bin/ruff
+elif [ -x .venv/Scripts/ruff.exe ]; then
+	ruff=.venv/Scripts/ruff.exe
+else
+	ruff=ruff
+fi
+
+"$ruff" check --fix .
+"$ruff" format .
