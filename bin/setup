@@ -1,26 +1,42 @@
 #!/bin/sh
-# create venv, install deps, seed .env
+# Bootstrap: create .venv, install deps, wire git hooks, seed .env.
+# Idempotent. Works on Linux, macOS, and Git Bash on Windows.
+# Override Python: PYTHON=python3.12 sh bin/setup
 set -eu
 
-py=${PYTHON:-python3}
-command -v "$py" >/dev/null 2>&1 || py=python
+py=${PYTHON:-}
+if [ -z "$py" ]; then
+	for cand in python3 python; do
+		if "$cand" -V >/dev/null 2>&1; then py=$cand; break; fi
+	done
+fi
+[ -n "$py" ] || { echo "no working python found; set PYTHON=..." >&2; exit 1; }
+
+# Refuse Python below 3.10 — pyproject demands it.
+"$py" -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3,10) else 1)' \
+	|| { echo "need Python >= 3.10 (got $($py -V 2>&1))" >&2; exit 1; }
 
 [ -d .venv ] || "$py" -m venv .venv
 
 if [ -x .venv/bin/python ]; then
 	vpy=.venv/bin/python
+	vbin=.venv/bin
 else
 	vpy=.venv/Scripts/python.exe
+	vbin=.venv/Scripts
 fi
 
-"$vpy" -m pip install --upgrade pip
-"$vpy" -m pip install -e ".[dev]"
+"$vpy" -m pip install --upgrade --quiet pip
+"$vpy" -m pip install --quiet -e ".[dev]"
 
 # Wire git hooks so contributors run the same checks CI does.
-if [ -d .git ] && [ -x .venv/bin/pre-commit ] || [ -x .venv/Scripts/pre-commit.exe ]; then
-	"$vpy" -m pre_commit install --install-hooks >/dev/null 2>&1 || true
-	"$vpy" -m pre_commit install --hook-type pre-push >/dev/null 2>&1 || true
+if [ -d .git ]; then
+	if [ -x "$vbin/pre-commit" ] || [ -x "$vbin/pre-commit.exe" ]; then
+		"$vpy" -m pre_commit install --install-hooks >/dev/null 2>&1 || true
+		"$vpy" -m pre_commit install --hook-type pre-push >/dev/null 2>&1 || true
+	fi
 fi
 
 [ -f .env ] || cp .env.example .env
+
 echo "ok. edit .env and set NOXUS_API_KEY."
