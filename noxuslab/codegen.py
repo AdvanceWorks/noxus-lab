@@ -55,6 +55,10 @@ def _topo_order(node_ids: list[str], edges: list[dict]) -> list[str]:
 def _config_kwargs(cfg: dict, hoisted: dict[str, str]) -> str:
     parts: list[str] = []
     for key in sorted(cfg):
+        if not key.isidentifier():
+            # Skip keys we can't render as Python kwargs; they round-trip
+            # via the wire dict but never appear in real workflows.
+            continue
         rendered = _py(cfg[key])
         if len(rendered) > CONFIG_INLINE_LIMIT:
             var_name = f"_{key.upper()}"
