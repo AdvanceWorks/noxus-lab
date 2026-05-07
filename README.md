@@ -5,19 +5,27 @@
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Sandbox + tiny CLI for the [Noxus AI](https://noxus.ai) Python SDK.
-Build flows in the UI, pull them into clean Python files, push them
-back. Or write the flow in code from scratch — your call.
+**Workflow-as-code for [Noxus AI](https://noxus.ai).** Build in the UI,
+edit in your IDE, review in pull requests. Two artifacts, one idea:
 
-> Use this repo as a **GitHub template** to bootstrap your own Noxus
-> project. Click *Use this template* on the repo page.
+- **This template repo** — clone-and-go starter with examples, docs,
+  pre-commit, CI. *Use this template* on the GitHub page.
+- **The `noxuslab` CLI** (PyPI) — `pip install noxuslab` for users who
+  already have a repo. Powers the UI ↔ code round-trip.
 
 ## why
 
 The Noxus UI is great for sketching. Code is great for diffing,
-reviewing, sharing, and version-controlling. `noxus-lab` lets you live
-in both: pull what you built, edit it as Python, push it back. The
-package stays small on purpose — see [docs/philosophy.md](docs/philosophy.md).
+reviewing, sharing, and version-controlling. `noxuslab pull <id>`
+turns a workflow you built in the UI into a clean Python file you can
+edit and `push` back. The package stays small on purpose — see
+[docs/philosophy.md](docs/philosophy.md).
+
+## install
+
+    pip install noxuslab           # CLI only, drop into any project
+    # or, full template:
+    # click 'Use this template' on github.com/AdvanceWorks/noxus-lab
 
 ## what you get
 
