@@ -1,7 +1,7 @@
 # Security policy
 
 This is a learning sandbox, not production software. If you find a real
-vulnerability — please email **luistunes@falnoa.com** with the details
+vulnerability — please email **luis.tunes@advanceworks.ai** with the details
 and a proof of concept. Do not file a public issue first.
 
 We will acknowledge within a few business days and aim to ship a fix

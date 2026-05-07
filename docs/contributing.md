@@ -39,4 +39,4 @@ opens a GitHub release with auto-generated notes. Bump
 
 - Bug or unexpected behaviour: open an issue with the *Bug* template.
 - Feature idea: open an issue with the *Feature* template before coding.
-- Security: email **luistunes@falnoa.com** — see [security.md](security.md).
+- Security: email **luis.tunes@advanceworks.ai** — see [security.md](security.md).
