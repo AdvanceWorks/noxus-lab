@@ -11,15 +11,18 @@
 """
 
 import argparse
+import difflib
 import os
 import re
 import runpy
+import shutil
 import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 from noxuslab import __version__
+from noxuslab._term import dim, red
 from noxuslab.codegen import _slug, workflow_to_python
 from noxuslab.errors import BadFile, NoxusLabError
 
@@ -120,6 +123,28 @@ def cmd_version(_args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_init(args: argparse.Namespace) -> int:
+    """Scaffold a new project under <dir> by copying examples + .env.example."""
+    target = Path(args.dir)
+    if target.exists() and any(target.iterdir()):
+        raise BadFile(f"refusing to scaffold into non-empty {target}")
+    target.mkdir(parents=True, exist_ok=True)
+    here = Path(__file__).resolve().parent.parent
+    src_examples = here / "examples"
+    if src_examples.is_dir():
+        shutil.copytree(src_examples, target / "examples", dirs_exist_ok=True)
+    env_tpl = here / ".env.example"
+    if env_tpl.is_file():
+        shutil.copy2(env_tpl, target / ".env.example")
+    (target / "README.md").write_text(
+        f"# {target.name}\n\nScaffolded by `noxuslab init`. "
+        "Copy .env.example to .env, set NOXUS_API_KEY, then run examples.\n",
+        encoding="utf-8",
+    )
+    print(target)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="noxuslab", description=__doc__)
     p.add_argument("-V", "--version", action="version", version=f"noxuslab {__version__}")
@@ -143,6 +168,16 @@ def main(argv: list[str] | None = None) -> int:
     ps.set_defaults(func=cmd_show)
 
     sub.add_parser("version", help="print noxuslab version").set_defaults(func=cmd_version)
+
+    pi = sub.add_parser("init", help="scaffold a new project from this template")
+    pi.add_argument("dir", help="target directory (must be empty or new)")
+    pi.set_defaults(func=cmd_init)
+
+    known = {a.dest for a in sub._choices_actions}  # type: ignore[attr-defined]
+    if argv and argv[0] not in known and not argv[0].startswith("-"):
+        guess = difflib.get_close_matches(argv[0], known, n=1)
+        if guess:
+            print(red(f"unknown command: {argv[0]}"), dim(f"(did you mean '{guess[0]}'?)"), file=sys.stderr)
 
     args = p.parse_args(argv)
     try:
