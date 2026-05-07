@@ -12,13 +12,21 @@ back. Or write the flow in code from scratch — your call.
 > Use this repo as a **GitHub template** to bootstrap your own Noxus
 > project. Click *Use this template* on the repo page.
 
+## why
+
+The Noxus UI is great for sketching. Code is great for diffing,
+reviewing, sharing, and version-controlling. `noxus-lab` lets you live
+in both: pull what you built, edit it as Python, push it back. The
+package stays small on purpose — see [docs/philosophy.md](docs/philosophy.md).
+
 ## what you get
 
 - `examples/` — one self-contained script per concept. Read top-down.
 - `noxuslab/` — small package with a CLI: `noxuslab pull <id>` turns a
   workflow built in the UI into an editable Python file under
   `examples/`. `noxuslab push <file>` does the reverse.
-- A real CI pipeline: ruff + pytest on Linux/macOS/Windows × Py 3.10/11/12.
+- A real CI pipeline: ruff + pytest on every push.
+- A `noxuslab` console script (also `python -m noxuslab`).
 
 ## setup
 
@@ -67,12 +75,15 @@ VS Code config in [.vscode/mcp.json](.vscode/mcp.json). See
 
 ## docs
 
+- [docs/philosophy.md](docs/philosophy.md) — three rules
 - [docs/concepts.md](docs/concepts.md) — primitives in 3 minutes
+- [docs/cli.md](docs/cli.md) — full CLI reference
 - [docs/codegen.md](docs/codegen.md) — how `noxuslab pull` works, limits
 - [docs/mcp.md](docs/mcp.md) — MCP server quick start
 - [docs/publish.md](docs/publish.md) — git workflow for this repo
 - [docs/security.md](docs/security.md) — vulnerability reporting
 - [docs/contributing.md](docs/contributing.md) — dev loop, PR checklist
+- [CHANGELOG.md](CHANGELOG.md) — release notes
 - [AGENTS.md](AGENTS.md) — rules for AI assistants and contributors
 
 ## layout
