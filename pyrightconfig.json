@@ -1,0 +1,10 @@
+{
+  "include": ["noxuslab", "examples", "tests"],
+  "exclude": [".venv", "build", "dist", "**/__pycache__"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": false
+}

@@ -1,62 +1,88 @@
-# AGENTS.md
+# AGENTS.md — rules for AI assistants and contributors
 
-Rules for AI coding assistants in this repo.
+This file is the contract every contributor (human or LLM) follows when
+touching the repo. Read it once. It is short on purpose.
 
-## Mission
+## North star
 
-Learning sandbox for the Noxus AI platform. Small, readable, runnable.
-One concept per example. No abstractions, no framework.
+A **terse, modern, learn-by-reading** sandbox for the Noxus AI Python
+SDK. Two layers, sharply separated:
 
-## House rules
+1. **`examples/`** — one concept per script. Top-level code, no `def
+   main`, no `__future__`, no abstractions. Optimise for *the reader on
+   their first day*.
+2. **`noxuslab/`** — small reusable package. Real docstrings, type
+   hints, tests. Optimise for *the reader writing their tenth script*.
 
-- **English only** in code, comments, docs, commits.
-- **Minimal deps.** Justify every line in `requirements.txt`. Dev-only
-  tools go in `requirements-dev.txt`.
-- **One concept per example.** New file under `examples/NN_short_name.py`,
-  numbered. Self-contained. No shared utility module.
-- **Top-level scripts.** No `def main()`, no `if __name__ == "__main__"`,
-  no `from __future__ import annotations`. Type hints only where they aid
-  the reader.
-- **Read source first.** The `noxus-sdk` README is the source of truth; do
-  not invent APIs. If unsure: `python -c "from noxus_sdk import *; help(...)"`.
-- **No secrets.** Never commit `.env`, API keys, workspace IDs. Load via
-  `os.environ` after `dotenv.load_dotenv()`.
-- **Idempotent.** Scripts safe to re-run; check existence or accept dups
-  and print clear IDs.
-- **Print, don't log.** This is a lab.
-- **Small commits.** One change. Imperative subject (`add kb example`).
+If a piece of logic appears twice in `examples/`, it is a candidate for
+`noxuslab/`. If it appears once, it stays inline.
 
-## Build & CI
+## Hard rules
 
-- `make` is the single user interface.
-- All non-trivial logic lives in `bin/` so CI runs the exact same code.
-  Never duplicate logic between the Makefile and CI — add a script in
-  `bin/` and call it from both.
-- Lint with `ruff` (config in `ruff.toml`). Pre-commit enforces it.
-- CI: [.github/workflows/ci.yml](.github/workflows/ci.yml) runs
-  `bin/setup`, `bin/lint`, then `compileall examples`.
+- **English only.** Comments, docstrings, identifiers, commit messages.
+- **No secrets in git.** `.env` is gitignored; `.env.example` is the
+  template. `gitleaks` runs on every commit.
+- **Idempotent-ish examples.** Running an example must not destroy
+  workflows or KBs that already exist on the platform. Create new
+  resources; let the user clean up via the UI or `make`.
+- **Conventional Commits.** `feat:`, `fix:`, `chore:`, `docs:`,
+  `refactor:`, `test:`, `ci:`. One topic per commit.
+- **Lint clean.** `make lint` must pass. `make test` must pass. CI
+  enforces both on three OSes and three Python versions.
+- **Don't add a dependency without need.** Justify in the PR. Pin
+  exactly one version of `noxus-sdk`.
 
 ## Style
 
-- Python 3.10+, standard library first.
-- `ruff` formatter is canonical.
-- Plain, terse, UNIX.
+- **Examples**: shebang, 1-line docstring with the invocation, top-level
+  script, `print` for output. Target ≤ 80 lines.
+- **Package code**: explicit imports, type hints on public APIs, no
+  exceptions for "just in case". Validate at boundaries only.
+- **Naming**: `snake_case` files, `PascalCase` classes, lowercase
+  example prefixes (`NN_short_name.py`).
 
-## When asked to add an example
+## Workflow
 
-1. Pick the next free number under `examples/`.
-2. Shebang + one-line docstring with the invocation.
-3. Load env, build, run, print. Done.
-4. Add a `make` target only if the script takes parameters worth naming.
-5. Append a one-line entry to the *run* section of the README.
+    make setup
+    make lint && make test
+    git switch -c feat/<short>
+    # ...code...
+    pre-commit run --all-files
+    git commit -m "feat(scope): one-line summary"
+    git push -u origin HEAD
+    # open PR
 
-## When asked about MCP
+Branch names follow `<type>/<short-kebab>`. PR titles follow
+Conventional Commits. PRs require a green CI before merge.
 
-Point to [docs/mcp.md](docs/mcp.md) and [.vscode/mcp.json](.vscode/mcp.json).
-The Noxus SDK ships `noxus mcp serve`. Do not reimplement it.
+## Extending noxus-lab
+
+You have three good entry points:
+
+1. **Add an example.** Pick the next free `NN_` prefix under
+   `examples/`. Mirror the style of existing ones. If your idea needs a
+   helper that other scripts could share, propose it for `noxuslab/`.
+2. **Improve the codegen.** `noxuslab.codegen.workflow_to_python`
+   produces Python from a `WorkflowDefinition`. Edge cases live in
+   `tests/test_codegen.py`. Add a failing test before changing the
+   generator.
+3. **Add a CLI subcommand.** `noxuslab` lives in `noxuslab/cli.py`. New
+   subcommands subclass nothing — just add a parser branch. Keep
+   side-effects out of import time.
+
+For deeper changes (new SDK abstraction, a new package under
+`noxuslab/`), open an issue first.
 
 ## Out of scope
 
-- Production deployment.
-- Wrapping the SDK in custom abstractions.
-- Anything that turns this into a framework.
+- Re-implementing the SDK or backend.
+- A web UI for this lab.
+- Multi-tenant support — one API key per workspace, full stop.
+- Translating prose to PT/ES.
+- Auto-publishing or auto-deleting platform resources.
+
+## When the agent is stuck
+
+Read the SDK source under `.venv/Lib/site-packages/noxus_sdk/`. It is
+small and the answer is usually there. If still stuck, leave a TODO and
+open an issue using the template — do not invent API shapes.

@@ -1,0 +1,82 @@
+"""Tests for `noxuslab.codegen.workflow_to_python` (offline)."""
+
+from noxuslab.codegen import _slug, _topo_order, workflow_to_python
+
+
+def test_slug():
+    assert _slug("Hello World!") == "hello_world"
+    assert _slug("---") == "workflow"
+    assert _slug("hello-noxus-lab") == "hello_noxus_lab"
+
+
+def test_workflow_to_python_basic(sample_workflow_dict):
+    code = workflow_to_python(sample_workflow_dict)
+    assert "WorkflowDefinition(name='test-flow')" in code
+    assert 'wf.node("InputNode")' in code
+    assert 'wf.node("TextGenerationNode")' in code
+    assert 'wf.node("OutputNode")' in code
+    assert "wf.link(" in code
+    assert "print(c.workflows.save(wf).id)" in code
+    i_input = code.index('wf.node("InputNode")')
+    i_gen = code.index('wf.node("TextGenerationNode")')
+    i_out = code.index('wf.node("OutputNode")')
+    assert i_input < i_gen < i_out
+
+
+def test_workflow_to_python_no_imports(sample_workflow_dict):
+    code = workflow_to_python(sample_workflow_dict, include_imports=False, runnable=False)
+    assert "import os" not in code
+    assert "save(wf)" not in code
+    assert "WorkflowDefinition(name='test-flow')" in code
+
+
+def test_workflow_to_python_compiles(sample_workflow_dict):
+    code = workflow_to_python(sample_workflow_dict)
+    compile(code, "<generated>", "exec")
+
+
+def test_topo_order_handles_cycle(sample_workflow_dict):
+    sample_workflow_dict["definition"]["edges"].append(
+        {
+            "from_id": {
+                "node_id": "33333333-3333-3333-3333-333333333333",
+                "connector_name": "output",
+                "key": None,
+                "optional": False,
+            },
+            "to_id": {
+                "node_id": "11111111-1111-1111-1111-111111111111",
+                "connector_name": "input",
+                "key": None,
+                "optional": False,
+            },
+            "id": "cycle",
+        }
+    )
+    ids = [n["id"] for n in sample_workflow_dict["definition"]["nodes"]]
+    out = _topo_order(ids, sample_workflow_dict["definition"]["edges"])
+    assert len(out) == 3
+
+
+def test_hoist_long_config():
+    wf_dict = {
+        "name": "big",
+        "definition": {
+            "nodes": [
+                {
+                    "type": "TextGenerationNode",
+                    "id": "a",
+                    "node_config": {"template": "x" * 200, "model": ["m"]},
+                }
+            ],
+            "edges": [],
+        },
+    }
+    code = workflow_to_python(wf_dict)
+    assert "_TEMPLATE = '" in code
+    assert "template=_TEMPLATE" in code
+
+
+def test_edge_with_key(sample_workflow_dict):
+    code = workflow_to_python(sample_workflow_dict)
+    assert ".input('variables', 'topic')" in code
