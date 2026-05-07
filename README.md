@@ -1,6 +1,7 @@
 # noxus-lab
 
 [![ci](https://github.com/AdvanceWorks/noxus-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/AdvanceWorks/noxus-lab/actions/workflows/ci.yml)
+[![pypi](https://img.shields.io/pypi/v/noxuslab.svg)](https://pypi.org/project/noxuslab/)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
