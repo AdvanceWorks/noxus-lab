@@ -5,9 +5,11 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-05-08
+
 ### Changed
 - README: dropped broken PyPI badge; install instructions now use
-  `pip install git+https://...@v0.3.0` until the project is registered
+  `pip install git+https://...@v0.3.1` until the project is registered
   on PyPI.
 - `release.yml`: GitHub-release-only (no PyPI step). Removed the
   duplicate `publish.yml` workflow.
@@ -110,7 +112,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AdvanceWorks/noxus-lab/releases/tag/v0.1.0
