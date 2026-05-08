@@ -22,6 +22,7 @@ Two paths, same repo:
 | **Builder** (writes code) | `make setup` → `make hello` → `make pull ID=<id>` → edit → PR → `make push` |
 | **User** (talks to AI) | `make setup` → `make chat AGENT=<id>` — ask questions, get answers |
 
+See [docs/quickstart.md](docs/quickstart.md) for a zero-assumption setup guide (no coding background needed).
 See [docs/for-builders.md](docs/for-builders.md) or
 [docs/for-users.md](docs/for-users.md) for the full guide.
 
