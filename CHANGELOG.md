@@ -5,6 +5,20 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.1] — 2026-05-08
+
+### Changed
+- **`noxuslab init` is now the canonical new-project path** in the docs.
+  The GitHub repo is framed as the source for the CLI/examples rather
+  than the default app scaffold for end users.
+
+### Fixed
+- **Scaffold README now matches the scaffold mode** — plain `noxuslab
+  init` no longer tells users to run `make setup`/`make help` when
+  those files were not copied. `--with-makefile` keeps the Make-based
+  instructions. The generated README also documents how to upgrade the
+  installed CLI later with `pip install --upgrade ...`.
+
 ## [0.8.0] — 2026-05-08
 
 ### Added
@@ -305,7 +319,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.6.0...v0.7.0

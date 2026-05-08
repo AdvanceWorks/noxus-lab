@@ -130,6 +130,31 @@ def cmd_version(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _scaffold_readme(project_name: str, *, with_makefile: bool) -> str:
+    header = (
+        f"# {project_name}\n\n"
+        f"Scaffolded by `noxuslab init` (template version `{__version__}`).\n\n"
+        "This is a CLI-first Noxus project. The installed `noxuslab` package "
+        "provides the commands; this repo holds your `examples/`, `.env`, and local state.\n\n"
+    )
+    upgrade = (
+        "Upgrade the CLI later with:\n\n"
+        "    pip install --upgrade git+https://github.com/AdvanceWorks/noxus-lab.git\n"
+    )
+    if with_makefile:
+        body = (
+            "Set `NOXUS_API_KEY` in `.env` (or rerun `noxuslab init --interactive`), "
+            "then run `make setup` and `make help`.\n\n"
+            "This scaffold includes `Makefile` + `bin/` wrappers, but they still call the same `noxuslab` CLI underneath.\n\n"
+        )
+    else:
+        body = (
+            "Set `NOXUS_API_KEY` in `.env` (or rerun `noxuslab init --interactive`), "
+            "then run `noxuslab doctor` and start from a file in `examples/` or `noxuslab pull <workflow_id>`.\n\n"
+        )
+    return header + body + upgrade
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     """Scaffold a new project under <dir> by copying examples + .env.example.
 
@@ -157,10 +182,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     # Pin the template version so `make template-update` can diff against it.
     (target / ".noxuslab-template-version").write_text(__version__ + "\n", encoding="utf-8")
     (target / "README.md").write_text(
-        f"# {target.name}\n\nScaffolded by `noxuslab init` "
-        f"(template version `{__version__}`). "
-        "Copy `.env.example` to `.env`, set `NOXUS_API_KEY`, then run "
-        "`make setup` and `make help`.\n",
+        _scaffold_readme(target.name, with_makefile=args.with_makefile),
         encoding="utf-8",
     )
 

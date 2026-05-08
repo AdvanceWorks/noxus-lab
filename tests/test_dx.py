@@ -30,6 +30,10 @@ def test_init_scaffolds(tmp_path: Path):
     rc = main(["init", str(target)])
     assert rc == 0
     assert (target / "README.md").is_file()
+    readme = (target / "README.md").read_text(encoding="utf-8")
+    assert "noxuslab doctor" in readme
+    assert "pip install --upgrade git+https://github.com/AdvanceWorks/noxus-lab.git" in readme
+    assert "make setup" not in readme
 
 
 def test_init_refuses_non_empty(tmp_path: Path, capsys):

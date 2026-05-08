@@ -118,6 +118,19 @@ help` menu as this repo. Refuses to scaffold into a non-empty
 directory. Writes `.noxuslab-template-version` so `make
 template-update` can later show what changed upstream.
 
+This is the default way to start a new Noxus project. The GitHub repo
+itself is primarily the source for the CLI and examples; most users
+should `pip install ...` and run `noxuslab init ...` instead of cloning
+the full repo.
+
+The generated project keeps the CLI in your virtualenv, not in the
+project tree. Upgrading later is a reinstall:
+
+    pip install --upgrade git+https://github.com/AdvanceWorks/noxus-lab.git
+
+The minimal scaffold does **not** assume `make`. Only `--with-makefile`
+adds `Makefile` + `bin/` wrappers.
+
 ## version
 
     noxuslab version

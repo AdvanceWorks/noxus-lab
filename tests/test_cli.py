@@ -125,3 +125,6 @@ def test_init_with_makefile_copies_makefile(tmp_path: Path):
     assert (target / "Makefile").is_file()
     assert (target / "bin").is_dir()
     assert (target / ".noxuslab-template-version").is_file()
+    readme = (target / "README.md").read_text(encoding="utf-8")
+    assert "make setup" in readme
+    assert "noxuslab doctor" not in readme

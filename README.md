@@ -5,22 +5,23 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 **Workflow-as-code for [Noxus AI](https://noxus.ai).** Build in the UI,
-edit in your IDE, review in pull requests. Chat with your AI agents from
-the terminal. Two artifacts, one idea:
+edit in your IDE, review in pull requests, and run/trace/debug from the
+terminal.
 
-- **This template repo** — clone-and-go starter with examples, docs,
-  pre-commit, CI. *Use this template* on the GitHub page.
-- **The `noxuslab` CLI** — install directly from git for users who
-  already have a repo. Powers the UI ↔ code round-trip + agent chat.
+The default way to start a new Noxus project is the CLI:
+
+        pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.8.1
+        noxuslab init my-noxus-project
 
 ## quick start
 
-Two paths, same repo:
+One path:
 
-| You are a... | Do this |
-|---|---|
-| **Builder** (writes code) | `make setup` → `make hello` → `make pull ID=<id>` → edit → PR → `make push FILE=examples/NN_<slug>.py` |
-| **User** (talks to AI) | `make setup` → `make chat AGENT=<id>` — ask questions, get answers |
+        pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.8.1
+        noxuslab init my-noxus-project
+        cd my-noxus-project
+        noxuslab doctor
+        noxuslab pull <workflow-id>
 
 See [docs/quickstart.md](docs/quickstart.md) for a zero-assumption setup guide (no coding background needed).
 See [docs/for-builders.md](docs/for-builders.md) or
@@ -36,20 +37,32 @@ edit and `push` back. The package stays small on purpose — see
 
 ## install
 
-    # CLI only, drop into any existing project:
-    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.8.0
+        # install the CLI
+        pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.8.1
 
-    # or, full template:
-    # click 'Use this template' on github.com/AdvanceWorks/noxus-lab
+        # create a project
+        noxuslab init my-noxus-project
+
+        # upgrade later when upstream ships new versions
+        pip install --upgrade git+https://github.com/AdvanceWorks/noxus-lab.git
+
+Use the GitHub repo itself when you want to contribute to `noxuslab`.
+For normal Noxus projects, `pip install ...` + `noxuslab init ...` is
+the canonical path.
 
 ## what you get
 
+Running `noxuslab init my-project` gives you:
+
 - `examples/` — one self-contained script per concept. Read top-down.
-- `noxuslab/` — small package with a CLI: `noxuslab pull <id>` turns a
-  workflow built in the UI into an editable Python file under
-  `examples/`. `noxuslab push <file>` does the reverse.
-- A real CI pipeline: ruff + pytest on every push.
-- A `noxuslab` console script (also `python -m noxuslab`).
+- `.env.example` — copy or fill via the interactive wizard.
+- `README.md` — minimal project-local instructions.
+- `.noxuslab-template-version` — the scaffold version used to create the project.
+- Optional `Makefile` + `bin/` if you pass `--with-makefile`.
+
+The `noxuslab` package itself stays installed in your virtualenv. When
+upstream changes, upgrade it with `pip install --upgrade ...`; your
+project files stay where they are.
 
 ## setup
 
