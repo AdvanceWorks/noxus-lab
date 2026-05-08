@@ -13,8 +13,6 @@ from __future__ import annotations
 
 import contextlib
 import json
-import re
-import runpy
 import sys
 import time
 from pathlib import Path
@@ -24,8 +22,6 @@ from noxuslab._net import call as net_call
 from noxuslab._term import dim, green, red
 from noxuslab._trace import TraceWriter, trace_path
 from noxuslab.errors import BadFile
-
-_UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 
 def _parse_input(pairs: list[str]) -> dict[str, Any]:
@@ -47,37 +43,11 @@ def _parse_input(pairs: list[str]) -> dict[str, Any]:
 
 def _load_or_push(client: Any, target: str) -> Any:
     """If `target` is a UUID, fetch it; if a file, push it then return the wf."""
-    if _UUID.match(target.lower()):
+    from noxuslab._workflow import LocalWorkflow, is_uuid
+
+    if is_uuid(target):
         return net_call(lambda: client.workflows.get(workflow_id=target), what="fetch workflow")
-    path = Path(target)
-    if not path.is_file():
-        raise BadFile(f"not a UUID and not a file: {target}")
-    # Push the local file: stub Client during runpy, save, then re-fetch by id.
-    import noxus_sdk.client as _sdk_client
-
-    real = _sdk_client.Client
-
-    class _Stub:
-        def __init__(self, *_a, **_k) -> None:
-            self.nodes = []
-            self.workflows = self
-
-        def __getattr__(self, _n):
-            return lambda *a, **k: None
-
-    src = path.read_text(encoding="utf-8")
-    src_clean = re.sub(r"^\s*print\(c\.workflows\.save\([^)]*\)\.id\)\s*$", "", src, flags=re.M)
-    tmp = path.with_suffix(".__noxuslab_run.py")
-    tmp.write_text(src_clean, encoding="utf-8")
-    _sdk_client.Client = _Stub  # type: ignore[assignment]
-    try:
-        ns = runpy.run_path(str(tmp), run_name="_noxuslab_run")
-    finally:
-        _sdk_client.Client = real  # type: ignore[assignment]
-        tmp.unlink(missing_ok=True)
-    wf_local = ns.get("wf")
-    if wf_local is None:
-        raise BadFile(f"{path}: no `wf` WorkflowDefinition found")
+    wf_local = LocalWorkflow.load(target).execute()
     return net_call(lambda: client.workflows.save(wf_local), what="save workflow")
 
 

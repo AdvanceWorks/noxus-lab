@@ -10,7 +10,7 @@ the terminal.
 
 ## install
 
-    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.9.1
+    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.10.0
     noxuslab init my-noxus-project
     cd my-noxus-project
     noxuslab doctor
@@ -25,6 +25,7 @@ The init wizard prompts for `NOXUS_API_KEY` and writes a chmod-600
 | Pull a workflow from the UI to code   | `noxuslab pull <workflow-id>`             |
 | Run it locally + record logs          | `noxuslab run examples/NN_x.py --input k=v` |
 | Inspect a past run (logs)             | `noxuslab trace [list \| show <id>]`      |
+| Replay a past run                     | `noxuslab replay <run-id>`                |
 | Review-before-push (dry-run+diff+log) | `noxuslab check examples/NN_x.py`         |
 | See server-vs-local diff              | `noxuslab diff examples/NN_x.py`          |
 | Push a code-defined workflow back     | `noxuslab push examples/NN_x.py`          |

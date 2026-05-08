@@ -12,6 +12,7 @@ clone). Also runnable as `python -m noxuslab`.
     noxuslab check <file>
     noxuslab diff [<workflow_id>] <file> [--visual]
     noxuslab run  <id-or-file>   [--input k=v]... [--detach]
+    noxuslab replay <run_id>     [--target <id-or-file>] [--detach]
     noxuslab trace [list | show <id>] [--limit N] [--json]
     noxuslab env   [list | use <name>]
     noxuslab list
@@ -141,6 +142,23 @@ is pushed first, then run. Each run is recorded under
 `list` shows the most recent local runs (one row each). `show`
 prints the captured inputs, per-node timings, output, and any error.
 `--json` emits a machine-readable form for piping.
+
+## replay
+
+    noxuslab replay <run-id>
+    noxuslab replay <run-id> --target <other-id-or-file>
+    noxuslab replay <run-id> --detach
+
+Reads the `header` line of a recorded trace, extracts the original
+`workflow_id` and `input`, and re-invokes the workflow through the
+same code path as `noxuslab run`. The replay produces a fresh trace
+that can be diffed against the original (`noxuslab trace show <new>`
+vs `noxuslab trace show <old>`).
+
+`--target` swaps the workflow but keeps the inputs — useful for
+running a refactored local file against the same data the server
+workflow saw. Foundation primitive for the upcoming eval / regression
+commands.
 
 ## env
 

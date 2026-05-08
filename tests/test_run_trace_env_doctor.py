@@ -222,7 +222,7 @@ def test_load_or_push_rejects_unknown_target(tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     from noxuslab.runner import _load_or_push
 
-    with pytest.raises(BadFile, match="not a UUID and not a file"):
+    with pytest.raises(BadFile, match="not found"):
         _load_or_push(client=object(), target="ghost.py")
 
 
@@ -266,3 +266,56 @@ def test_run_cli_handler_dispatches(monkeypatch):
     rc = cli.cmd_run(args)
     assert rc == 0
     assert captured == {"target": "wf-id", "inputs": ["k=1"], "follow": True}
+
+
+def test_replay_uses_trace_inputs(tmp_path: Path, monkeypatch):
+    """`cmd_replay` reads workflow_id + input from a trace and re-invokes runner."""
+    import argparse
+    import json as _json
+
+    from noxuslab import cli
+
+    monkeypatch.chdir(tmp_path)
+    wid = "11111111-2222-3333-4444-555555555555"
+    tdir = tmp_path / ".noxuslab" / "traces"
+    tdir.mkdir(parents=True)
+    tp = tdir / "2026-05-08T00-00-00_runZ.jsonl"
+    tp.write_text(
+        _json.dumps(
+            {
+                "kind": "header",
+                "ts": "2026-05-08T00:00:00",
+                "workflow_id": wid,
+                "input": {"topic": "octopus", "n": 3},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    captured = {}
+
+    def fake_run(target, inputs, *, follow):
+        captured["target"] = target
+        captured["inputs"] = inputs
+        captured["follow"] = follow
+        return 0
+
+    monkeypatch.setattr("noxuslab.runner.run", fake_run)
+    monkeypatch.setattr(cli, "load_dotenv", lambda *a, **k: None)
+
+    rc = cli.cmd_replay(argparse.Namespace(run_id="runZ", target=None, detach=False))
+    assert rc == 0
+    assert captured["target"] == wid
+    assert sorted(captured["inputs"]) == sorted(['topic="octopus"', "n=3"])
+    assert captured["follow"] is True
+
+
+def test_replay_missing_trace_raises(tmp_path: Path, monkeypatch):
+    import argparse
+
+    from noxuslab import cli
+
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(BadFile, match="no trace matches"):
+        cli.cmd_replay(argparse.Namespace(run_id="ghost", target=None, detach=False))

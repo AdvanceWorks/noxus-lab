@@ -5,6 +5,38 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-05-08
+
+### Added
+- **`noxuslab/_workflow.py` — the `LocalWorkflow` primitive.** One
+  module owns reading a workflow `.py` file, extracting its provenance
+  id, and executing it in a sandboxed namespace with the SDK `Client`
+  stubbed. Replaces five hand-rolled copies of the same logic in
+  `cli.cmd_push`, `cli.cmd_diff --visual`, `cli._load_agent_file`,
+  `fmt.py`, and `runner.py`. New callers (replay, eval, future
+  features) are now one line each.
+- **`noxuslab replay <run-id>`** — re-runs a workflow using the
+  inputs captured in a previous trace. Foundation for upcoming eval /
+  regression commands; produces a fresh trace that can be diffed
+  against the original. Optional `--target` swaps the workflow but
+  keeps the inputs (useful for running a refactored local file against
+  the same data the server saw).
+- **AGENTS.md “Platform Primitives” rule.** Codifies that new features
+  must extract or reuse a primitive in `noxuslab/_*.py` rather than
+  ship as a one-off helper.
+
+### Changed
+- **`noxuslab fmt`** uses `LocalWorkflow` for parsing + provenance
+  extraction — net loss of ~50 lines and the duplicated
+  `_StubClient`. Behaviour identical.
+- **`noxuslab run` / `runner._load_or_push`** uses `LocalWorkflow` and
+  `_workflow.is_uuid`. The error message for a missing target file
+  changed from `not a UUID and not a file: <x>` to `not found: <x>`
+  (still raises `BadFile`).
+- **`noxuslab.cli`** drops its private `_UUID` regex and inline
+  `_extract_source_id` in favour of `_workflow.check_uuid` /
+  `extract_source_id`. Public CLI surface unchanged.
+
 ## [0.9.1] — 2026-05-08
 
 ### Added

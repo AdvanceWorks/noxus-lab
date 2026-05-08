@@ -55,6 +55,29 @@ If a piece of logic appears twice in `examples/`, it is a candidate for
   or with marketing words like "godlike". Describe what the change
   does and why it matters.
 
+## Platform primitives
+
+Before adding a feature, ask: "What primitive makes this entire
+category trivial?" If you find yourself copy-pasting more than ~5
+lines between two callsites, extract a primitive into
+`noxuslab/_*.py`.
+
+Current primitives:
+
+- `noxuslab._workflow.LocalWorkflow` — load + sandbox-execute a
+  workflow `.py` file. Used by `push`, `run`, `check`, `diff`, `fmt`,
+  `replay`, and the agent loader.
+- `noxuslab._trace.TraceWriter` / `read_trace` / `find_trace` —
+  append-only JSONL trace store. Written by `run`; consumed by
+  `trace`, `check`, `replay`.
+- `noxuslab._net.call` — single point for HTTP error mapping.
+- `noxuslab._secrets.resolve_api_key` — env / dotenv / external
+  command resolution.
+
+Prefer deleting code, collapsing layers, and removing indirection
+over adding flexibility. A smaller architecture beats a more
+configurable one.
+
 ## Workflow
 
     pip install -e ".[dev]"
