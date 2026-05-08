@@ -6,6 +6,11 @@ and [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `noxuslab._net.call()` wrapper around all Noxus API calls: retries
+  transient failures (5xx, 429, timeouts) with exponential backoff +
+  jitter. Tunable via `NOXUSLAB_MAX_RETRIES`, `NOXUSLAB_BASE_DELAY`,
+  `NOXUSLAB_MAX_DELAY` env vars.
+- `NetworkError` and `RateLimited` typed exceptions.
 - `noxuslab chat [--agent <id>] [--model <name>]` — interactive
   conversation REPL with SSE-streamed responses. `/exit`, `/clear`
   built-ins.

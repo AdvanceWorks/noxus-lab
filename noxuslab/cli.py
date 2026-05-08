@@ -25,6 +25,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from noxuslab import __version__
+from noxuslab._net import call as net_call
 from noxuslab._term import dim, red
 from noxuslab.codegen import _slug, workflow_to_python
 from noxuslab.errors import BadFile, NoxusLabError
@@ -60,7 +61,8 @@ def _next_example_path(name_slug: str) -> Path:
 def cmd_pull(args: argparse.Namespace) -> int:
     _check_id(args.workflow_id)
     load_dotenv()
-    wf = _client().workflows.get(workflow_id=args.workflow_id)
+    client = _client()
+    wf = net_call(lambda: client.workflows.get(workflow_id=args.workflow_id), what="pull workflow")
     code = workflow_to_python(wf, source_id=args.workflow_id)
     if args.out == "-":
         sys.stdout.write(code)
@@ -96,13 +98,15 @@ def cmd_push(args: argparse.Namespace) -> int:
         edges = len(getattr(wf, "edges", []) or [])
         print(f"ok: {nodes} nodes, {edges} edges")
         return 0
-    print(_client().workflows.save(wf).id)
+    client = _client()
+    print(net_call(lambda: client.workflows.save(wf).id, what="push workflow"))
     return 0
 
 
 def cmd_list(_args: argparse.Namespace) -> int:
     load_dotenv()
-    for w in _client().workflows.list():
+    client = _client()
+    for w in net_call(lambda: list(client.workflows.list()), what="list workflows"):
         print(f"{w.id}  {w.name}")
     return 0
 
@@ -112,7 +116,8 @@ def cmd_show(args: argparse.Namespace) -> int:
 
     _check_id(args.workflow_id)
     load_dotenv()
-    wf = _client().workflows.get(workflow_id=args.workflow_id)
+    client = _client()
+    wf = net_call(lambda: client.workflows.get(workflow_id=args.workflow_id), what="show workflow")
     json.dump(wf.to_noxus(), sys.stdout, indent=2, default=str)
     sys.stdout.write("\n")
     return 0
@@ -158,7 +163,8 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def cmd_agents(_args: argparse.Namespace) -> int:
     load_dotenv()
-    for a in _client().agents.list():
+    client = _client()
+    for a in net_call(lambda: list(client.agents.list()), what="list agents"):
         print(f"{a.id}  {a.name}")
     return 0
 

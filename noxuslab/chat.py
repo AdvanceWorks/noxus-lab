@@ -5,6 +5,7 @@ import sys
 
 from dotenv import load_dotenv
 
+from noxuslab._net import call as net_call
 from noxuslab._term import bold, dim, green
 from noxuslab.errors import AuthMissing
 
@@ -27,14 +28,20 @@ def _create_conversation(client, *, agent_id: str | None, model: str | None):
     from noxus_sdk.resources.conversations import ConversationSettings
 
     if agent_id:
-        return client.conversations.create(name="noxuslab-chat", agent_id=agent_id)
+        return net_call(
+            lambda: client.conversations.create(name="noxuslab-chat", agent_id=agent_id),
+            what="create conversation",
+        )
     settings = ConversationSettings(
         model=[model or "gemini-2.5-flash"],
         temperature=0.7,
         max_tokens=4096,
         tools=[],
     )
-    return client.conversations.create(name="noxuslab-chat", settings=settings)
+    return net_call(
+        lambda: client.conversations.create(name="noxuslab-chat", settings=settings),
+        what="create conversation",
+    )
 
 
 def _stream_reply(conversation) -> str:
@@ -55,7 +62,7 @@ def _send_blocking(conversation, text: str) -> str:
     """Send a message and stream the response."""
     from noxus_sdk.resources.conversations import MessageRequest
 
-    conversation.chat(MessageRequest(content=text))
+    net_call(lambda: conversation.chat(MessageRequest(content=text)), what="send message")
     return _stream_reply(conversation)
 
 
