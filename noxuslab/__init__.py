@@ -10,4 +10,4 @@ Everything pedagogical lives under `examples/` at the repo root and is
 deliberately kept terse and free of `noxuslab` imports.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
