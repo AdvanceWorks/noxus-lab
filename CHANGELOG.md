@@ -5,6 +5,13 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- README: dropped broken PyPI badge; install instructions now use
+  `pip install git+https://...@v0.3.0` until the project is registered
+  on PyPI.
+- `release.yml`: GitHub-release-only (no PyPI step). Removed the
+  duplicate `publish.yml` workflow.
+
 ## [0.3.0] — 2026-05-08
 
 ### Added

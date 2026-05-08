@@ -1,7 +1,6 @@
 # noxus-lab
 
 [![ci](https://github.com/AdvanceWorks/noxus-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/AdvanceWorks/noxus-lab/actions/workflows/ci.yml)
-[![pypi](https://img.shields.io/pypi/v/noxuslab.svg)](https://pypi.org/project/noxuslab/)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -11,7 +10,7 @@ the terminal. Two artifacts, one idea:
 
 - **This template repo** — clone-and-go starter with examples, docs,
   pre-commit, CI. *Use this template* on the GitHub page.
-- **The `noxuslab` CLI** (PyPI) — `pip install noxuslab` for users who
+- **The `noxuslab` CLI** — install directly from git for users who
   already have a repo. Powers the UI ↔ code round-trip + agent chat.
 
 ## quick start
@@ -36,7 +35,9 @@ edit and `push` back. The package stays small on purpose — see
 
 ## install
 
-    pip install noxuslab           # CLI only, drop into any project
+    # CLI only, drop into any existing project:
+    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.3.0
+
     # or, full template:
     # click 'Use this template' on github.com/AdvanceWorks/noxus-lab
 
