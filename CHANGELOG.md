@@ -5,6 +5,37 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-05-08
+
+### Added
+- **`noxuslab run <target> --input k=v`** — execute a workflow and
+  stream live events. `<target>` is either a server-side workflow UUID
+  or a local Python file (auto-saved before run). Inputs are
+  JSON-decoded when possible; prefix a value with `@` to load JSON
+  from a file. `--detach` triggers and exits.
+- **JSONL trace recorder** (`noxuslab._trace`) — every `run` writes
+  one JSONL file under `.noxuslab/traces/<utc>_<run_id>.jsonl`.
+  Header + per-event lines + footer; flushed per line so it is
+  tail-able from another terminal. Secret-shaped keys (`api_key`,
+  `token`, `password`, ...) are redacted before being written.
+- **`noxuslab trace [list|show]`** — inspect recorded runs. `list`
+  shows newest first with status + elapsed. `show <id>` renders a
+  timeline (relative timestamps, node names, status footer). `--json`
+  emits the raw JSONL entries.
+- **`noxuslab env [list|use]`** — switch between `.env.dev`,
+  `.env.staging`, `.env.prod`, etc. The chosen file is copied to
+  `.env` (works on Windows without admin); active name recorded in
+  `.noxuslab/active-env`.
+- **`noxuslab doctor`** — green/red checks for Python version,
+  `noxuslab`/`noxus_sdk` install, `NOXUS_API_KEY` resolution, backend
+  reachability, trace dir writability, and active env. Exit code 0
+  on full pass, 1 on any hard failure.
+- New modules: `noxuslab.runner`, `noxuslab._trace`,
+  `noxuslab.trace_view`, `noxuslab.envs`, `noxuslab.doctor`.
+- Tests: `tests/test_run_trace_env_doctor.py` covers trace I/O and
+  redaction, input parsing (`k=v`, JSON, `@file`), env switching,
+  doctor pass/fail, runner UUID dispatch, and CLI handler wiring.
+
 ## [0.7.1] — 2026-05-08
 
 ### Fixed
@@ -274,7 +305,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.5.0...v0.6.0

@@ -457,6 +457,39 @@ def cmd_portal(args: argparse.Namespace) -> int:
     return portal_serve(host=args.host, port=args.port, open_browser=not args.no_open)
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    from noxuslab.runner import run as runner_run
+
+    load_dotenv()
+    return runner_run(args.target, args.input or [], follow=not args.detach)
+
+
+def cmd_trace(args: argparse.Namespace) -> int:
+    from noxuslab import trace_view
+
+    if args.trace_cmd in (None, "list"):
+        return trace_view.cmd_list(limit=args.limit if hasattr(args, "limit") else 20)
+    if args.trace_cmd == "show":
+        return trace_view.cmd_show(args.id, json_out=args.json)
+    raise BadFile(f"unknown trace subcommand: {args.trace_cmd}")
+
+
+def cmd_env(args: argparse.Namespace) -> int:
+    from noxuslab import envs
+
+    if args.env_cmd in (None, "list"):
+        return envs.cmd_list()
+    if args.env_cmd == "use":
+        return envs.cmd_use(args.name)
+    raise BadFile(f"unknown env subcommand: {args.env_cmd}")
+
+
+def cmd_doctor(_args: argparse.Namespace) -> int:
+    from noxuslab.doctor import doctor
+
+    return doctor()
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="noxuslab", description=__doc__)
     p.add_argument("-V", "--version", action="version", version=f"noxuslab {__version__}")
@@ -586,6 +619,45 @@ def main(argv: list[str] | None = None) -> int:
     pp_portal.add_argument("--port", type=int, default=7890, help="TCP port (default 7890)")
     pp_portal.add_argument("--no-open", action="store_true", help="don't auto-open the browser")
     pp_portal.set_defaults(func=cmd_portal)
+
+    pr = sub.add_parser("run", help="execute a workflow (UUID or local file) with live trace")
+    pr.add_argument("target", help="workflow UUID or path to a workflow .py file")
+    pr.add_argument(
+        "--input",
+        action="append",
+        metavar="K=V",
+        help="input key=value (repeatable). Values are JSON-decoded; use @file for blobs",
+    )
+    pr.add_argument(
+        "--detach",
+        action="store_true",
+        help="trigger and exit; don't follow events (prints run id and quits)",
+    )
+    pr.set_defaults(func=cmd_run)
+
+    ptr = sub.add_parser("trace", help="list or inspect recorded run traces (~/.noxuslab/traces)")
+    ptr_sub = ptr.add_subparsers(dest="trace_cmd", required=False)
+    ptr.set_defaults(func=cmd_trace)
+    ptr_list = ptr_sub.add_parser("list", help="list recent traces (newest first)")
+    ptr_list.add_argument("--limit", type=int, default=20, help="max rows to show")
+    ptr_list.set_defaults(func=cmd_trace)
+    ptr_show = ptr_sub.add_parser("show", help="render a trace as a timeline")
+    ptr_show.add_argument("id", help="run id, prefix, or full filename")
+    ptr_show.add_argument("--json", action="store_true", help="emit raw JSONL entries instead")
+    ptr_show.set_defaults(func=cmd_trace)
+
+    pe = sub.add_parser("env", help="list or switch active environment (.env.<name>)")
+    pe_sub = pe.add_subparsers(dest="env_cmd", required=False)
+    pe.set_defaults(func=cmd_env)
+    pe_sub.add_parser("list", help="list available envs (active marked with *)").set_defaults(
+        func=cmd_env
+    )
+    pe_use = pe_sub.add_parser("use", help="switch the active env (copies .env.<name> to .env)")
+    pe_use.add_argument("name", help="env name (e.g. dev, staging, prod)")
+    pe_use.set_defaults(func=cmd_env)
+
+    pdoc = sub.add_parser("doctor", help="run sanity checks on the local setup")
+    pdoc.set_defaults(func=cmd_doctor)
 
     known = {a.dest for a in sub._choices_actions}  # type: ignore[attr-defined]
     if argv and argv[0] not in known and not argv[0].startswith("-"):

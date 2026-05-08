@@ -5,6 +5,9 @@
 *.key
 *.pem
 
+# noxuslab local state (traces, active env marker)
+.noxuslab/
+
 # python
 __pycache__/
 *.py[cod]
