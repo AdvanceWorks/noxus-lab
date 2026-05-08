@@ -10,9 +10,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      # Trimmed matrix: cover every supported OS + the min/max Python.
+      # 9 jobs → 4. Mid-version (3.11) skipped because 3.10 + 3.12 boundary
+      # the syntax/semantics range; add it back if a 3.11-only bug appears.
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python: ["3.10", "3.11", "3.12"]
+        include:
+          - { os: ubuntu-latest,  python: "3.10" }
+          - { os: ubuntu-latest,  python: "3.12" }
+          - { os: macos-latest,   python: "3.12" }
+          - { os: windows-latest, python: "3.12" }
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6

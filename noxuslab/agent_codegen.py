@@ -12,7 +12,7 @@ Round-trip contract:
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -59,7 +59,7 @@ def agent_to_python(agent: Agent, *, source_id: str | None = None) -> str:
     settings_lit = json.dumps(settings_dict, indent=4, sort_keys=True)
     return _HEADER.format(
         source=source_id or agent.id,
-        ts=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        ts=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         name=agent.name,
         agent_id=source_id or agent.id,
         settings=settings_lit,

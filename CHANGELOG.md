@@ -5,6 +5,26 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-05-08
+
+### Fixed
+- **Python 3.10 CI** — `agent_codegen` used `from datetime import UTC`,
+  which is 3.11+. Switched to `timezone.utc` to match the rest of the
+  codebase.
+
+### Changed
+- **CI matrix trimmed** from 9 jobs to 4: ubuntu × {3.10, 3.12},
+  macos × 3.12, windows × 3.12. Covers every supported OS plus the
+  min/max Python boundary; mid-version (3.11) is dropped because the
+  syntax/semantics range is bracketed by 3.10 and 3.12. Add it back if
+  a 3.11-only bug appears.
+- **Subagents split into dedicated files** under
+  [.github/agents/](.github/agents/): `Explore.agent.md` (read-only
+  research), `Refactor.agent.md` (mechanical changes), and
+  `Release.agent.md` (version bump + tag + push). AGENTS.md now points
+  to them with one-line summaries instead of inlining the full
+  procedure.
+
 ## [0.7.0] — 2026-05-08
 
 ### Added
@@ -254,7 +274,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.4.0...v0.5.0

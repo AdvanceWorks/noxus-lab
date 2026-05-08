@@ -99,16 +99,29 @@ Treat this as a checklist for every non-trivial change.
 - Pick the smallest scope that satisfies the request. Out-of-scope
   refactors live in their own commit.
 
-### 2. Use subagents for read-only exploration
+### 2. Use subagents for delegated work
 
-- Spawn the **`Explore`** subagent (via `runSubagent`) when you need
-  to read more than ~5 files or grep widely. The subagent returns one
-  message — your conversation stays clean.
-- Run independent subagents in parallel. Each is stateless; pass full
-  context in the prompt.
-- Do **not** ask a subagent to write code unless explicitly delegated.
-- Pick thoroughness on purpose: `quick` for a single fact, `medium`
-  for a feature audit, `thorough` only for repo-wide design questions.
+Three subagents live under [.github/agents/](.github/agents/). Each
+has a single, narrow job:
+
+- **[Explore](.github/agents/Explore.agent.md)** — read-only research.
+  Spawn when you need to read > 5 files or grep widely. Returns one
+  scannable message with `[path](path#L12)` citations. Safe in parallel.
+- **[Refactor](.github/agents/Refactor.agent.md)** — focused mechanical
+  changes (rename, extract, drop dead code). Lists every call site
+  before editing. Verifies lint+tests after.
+- **[Release](.github/agents/Release.agent.md)** — cut a new version.
+  Bumps the three version files, updates the changelog, runs the full
+  verify pipeline, commits with Conventional Commits, tags, pushes.
+
+Rules of engagement:
+
+- Each subagent is **stateless** — pass full context in the prompt.
+- Run independent subagents **in parallel** when possible.
+- Do **not** ask `Explore` to write code; spawn `Refactor` for that.
+- Pick thoroughness on purpose for `Explore`: `quick` (one fact,
+  ≤5 reads), `medium` (feature audit, ≤20 reads), `thorough` (design
+  question, no cap but stay focused).
 
 ### 3. Edit with intent
 
