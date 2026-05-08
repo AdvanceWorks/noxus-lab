@@ -36,10 +36,11 @@ _UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 def _client():
     from noxus_sdk.client import Client
 
-    return Client(
-        api_key=os.environ["NOXUS_API_KEY"],
-        base_url=os.environ.get("NOXUS_BACKEND_URL"),
-    )
+    kwargs: dict = {"api_key": os.environ["NOXUS_API_KEY"]}
+    url = os.environ.get("NOXUS_BACKEND_URL")
+    if url:
+        kwargs["base_url"] = url
+    return Client(**kwargs)
 
 
 def _check_id(wid: str) -> None:

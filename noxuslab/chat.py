@@ -15,7 +15,11 @@ def _make_client():
     key = os.environ.get("NOXUS_API_KEY")
     if not key:
         raise AuthMissing("NOXUS_API_KEY not set (check .env)")
-    return Client(api_key=key, base_url=os.environ.get("NOXUS_BACKEND_URL"))
+    kwargs: dict = {"api_key": key}
+    url = os.environ.get("NOXUS_BACKEND_URL")
+    if url:
+        kwargs["base_url"] = url
+    return Client(**kwargs)
 
 
 def _create_conversation(client, *, agent_id: str | None, model: str | None):
