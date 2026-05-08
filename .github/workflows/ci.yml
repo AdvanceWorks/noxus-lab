@@ -19,28 +19,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - name: setup (locked, posix)
-        if: runner.os != 'Windows'
-        env:
-          LOCKED: "1"
-        run: sh bin/setup
-      - name: setup (locked, windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        env:
-          LOCKED: "1"
-        run: sh bin/setup
+      - name: install
+        run: pip install -e ".[dev]"
       - name: lint
-        if: runner.os != 'Windows'
-        run: sh bin/lint
-      - name: lint (windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: sh bin/lint
+        run: |
+          ruff check .
+          ruff format --check .
       - name: test
-        if: runner.os != 'Windows'
-        run: sh bin/test
-      - name: test (windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: sh bin/test
+        run: pytest

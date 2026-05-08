@@ -50,9 +50,11 @@ and [Semantic Versioning](https://semver.org/).
 - `tests/test_chat.py` — 6 tests covering chat REPL behaviour (mocked).
 
 ### Changed
+- CI matrix: install from pyproject.toml (not lockfile) so all Python
+  versions resolve their own backport deps. Lock stays for local dev
+  reproducibility. Fixes 3.10 CI failures.
 - CI matrix expanded from 2 jobs (Ubuntu × Py 3.10/3.12) to 6
-  (Ubuntu + macOS + Windows × Py 3.10/3.12). All jobs install from
-  `requirements-dev.lock` for reproducibility.
+  (Ubuntu + macOS + Windows × Py 3.10/3.12).
 - README: dual-audience quickstart table + chat/ask in the run section.
 - AGENTS.md: hard rule that every behaviour change updates CHANGELOG;
   Docker explicitly out of scope.
