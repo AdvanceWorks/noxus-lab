@@ -130,29 +130,17 @@ def cmd_version(_args: argparse.Namespace) -> int:
     return 0
 
 
-def _scaffold_readme(project_name: str, *, with_makefile: bool) -> str:
-    header = (
+def _scaffold_readme(project_name: str) -> str:
+    return (
         f"# {project_name}\n\n"
         f"Scaffolded by `noxuslab init` (template version `{__version__}`).\n\n"
         "This is a CLI-first Noxus project. The installed `noxuslab` package "
         "provides the commands; this repo holds your `examples/`, `.env`, and local state.\n\n"
-    )
-    upgrade = (
+        "Set `NOXUS_API_KEY` in `.env` (or rerun `noxuslab init --interactive`), "
+        "then run `noxuslab doctor` and start from a file in `examples/` or `noxuslab pull <workflow_id>`.\n\n"
         "Upgrade the CLI later with:\n\n"
         "    pip install --upgrade git+https://github.com/AdvanceWorks/noxus-lab.git\n"
     )
-    if with_makefile:
-        body = (
-            "Set `NOXUS_API_KEY` in `.env` (or rerun `noxuslab init --interactive`), "
-            "then run `make setup` and `make help`.\n\n"
-            "This scaffold includes `Makefile` + `bin/` wrappers, but they still call the same `noxuslab` CLI underneath.\n\n"
-        )
-    else:
-        body = (
-            "Set `NOXUS_API_KEY` in `.env` (or rerun `noxuslab init --interactive`), "
-            "then run `noxuslab doctor` and start from a file in `examples/` or `noxuslab pull <workflow_id>`.\n\n"
-        )
-    return header + body + upgrade
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -172,19 +160,9 @@ def cmd_init(args: argparse.Namespace) -> int:
     env_tpl = here / ".env.example"
     if env_tpl.is_file():
         shutil.copy2(env_tpl, target / ".env.example")
-    if args.with_makefile:
-        for name in ("Makefile", "bin"):
-            src = here / name
-            if src.is_file():
-                shutil.copy2(src, target / name)
-            elif src.is_dir():
-                shutil.copytree(src, target / name, dirs_exist_ok=True)
-    # Pin the template version so `make template-update` can diff against it.
+    # Pin the template version so future tooling can diff against it.
     (target / ".noxuslab-template-version").write_text(__version__ + "\n", encoding="utf-8")
-    (target / "README.md").write_text(
-        _scaffold_readme(target.name, with_makefile=args.with_makefile),
-        encoding="utf-8",
-    )
+    (target / "README.md").write_text(_scaffold_readme(target.name), encoding="utf-8")
 
     interactive = args.interactive or (
         args.interactive is None and sys.stdin.isatty() and sys.stdout.isatty()
@@ -212,7 +190,7 @@ def _run_init_wizard(target: Path) -> None:
         url = input("backend url [https://backend.noxus.ai]: ").strip()
     except (EOFError, KeyboardInterrupt):
         print()
-        print(dim("wizard skipped — edit .env manually before `make setup`"))
+        print(dim("wizard skipped — edit .env manually, then run `noxuslab doctor`"))
         return
 
     lines = []
@@ -538,7 +516,6 @@ def main(argv: list[str] | None = None) -> int:
 
     pi = sub.add_parser("init", help="scaffold a new project from this template")
     pi.add_argument("dir", help="target directory (must be empty or new)")
-    pi.add_argument("--with-makefile", action="store_true", help="also copy Makefile + bin/")
     pi.add_argument(
         "--interactive",
         action=argparse.BooleanOptionalAction,

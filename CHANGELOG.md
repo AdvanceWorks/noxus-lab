@@ -5,6 +5,40 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-05-08
+
+### Removed
+- **`Makefile` and `bin/` wrappers** at the repo root. The `noxuslab`
+  CLI is now the single, canonical interface — every former `make`
+  target maps directly to a `noxuslab` subcommand. See the cheat
+  sheet in [README](README.md).
+- **`noxuslab init --with-makefile`** flag (and its `Makefile`/`bin/`
+  copies). New scaffolds are CLI-only, matching the published
+  philosophy.
+- **`docs/quickstart.md`, `docs/for-users.md`, `docs/for-builders.md`,
+  `docs/philosophy.md`, `docs/publish.md`, `docs/security.md`** —
+  collapsed into [README.md](README.md), [docs/cli.md](docs/cli.md),
+  [docs/contributing.md](docs/contributing.md), and root
+  [SECURITY.md](SECURITY.md). One page per concept, no overlap.
+
+### Changed
+- **README** is now ~80 lines and tells one story: install, init, one
+  cheat-sheet table, links to deeper docs.
+- **`docs/cli.md`** is the canonical command reference (init, doctor,
+  pull/push/diff, run/trace/env, list/show, agents, chat/ask, gen,
+  watch, fmt, portal, mcp, version) — each command in one place,
+  no duplication with the README.
+- **`docs/contributing.md`** describes the inner loop in three plain
+  commands (`pip install -e ".[dev]"`, `ruff check .`,
+  `pytest`) and includes the lock-file regeneration recipe inline.
+- **`AGENTS.md`** updated: hard rule is now "`ruff check .` and
+  `pytest` must pass"; the workflow snippet uses the CLI directly
+  instead of `make`. New rule: "No Docker, no Make."
+- **`.pre-commit-config.yaml`** drops the pre-push pytest hook (it
+  relied on `sh bin/test`); contributors run `pytest` before pushing
+  and CI is the source of truth.
+- **`.editorconfig`** drops the `[Makefile]` indent override.
+
 ## [0.8.1] — 2026-05-08
 
 ### Changed

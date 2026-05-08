@@ -12,7 +12,9 @@
 
 ## Checklist
 
-- [ ] `make lint` passes
-- [ ] `make test` passes
+- [ ] `ruff check .` passes
+- [ ] `pytest` passes (coverage ≥ 70%)
+- [ ] `CHANGELOG.md` updated under `## [Unreleased]`
+- [ ] Conventional Commit title (`feat:`, `fix:`, `docs:`, ...)
 - [ ] Updated docs / README if user-facing
 - [ ] Conventional Commits in branch history

@@ -24,21 +24,23 @@ If a piece of logic appears twice in `examples/`, it is a candidate for
   template. `gitleaks` runs on every commit.
 - **Idempotent-ish examples.** Running an example must not destroy
   workflows or KBs that already exist on the platform. Create new
-  resources; let the user clean up via the UI or `make`.
+  resources; let the user clean up via the Noxus UI.
 - **Conventional Commits.** `feat:`, `fix:`, `chore:`, `docs:`,
   `refactor:`, `test:`, `ci:`. One topic per commit.
-- **Lint and test clean.** `make lint` and `make test` must pass
-  locally before every commit. CI enforces both on three OSes ×
-  three Python versions.
-- **Coverage gate ≥ 70%.** `pytest --cov-fail-under=70` is wired into
-  the test command. New modules ship with at least one offline test.
+- **Lint and test clean.** `ruff check .` and `pytest` must pass
+  locally before every commit. CI enforces both on Linux, macOS,
+  and Windows.
+- **Coverage gate ≥ 70%.** `pytest --cov-fail-under=70` is wired
+  into the test command. New modules ship with at least one offline
+  test.
 - **Don't add a dependency without need.** Justify in the PR. Pin
-  exactly one version of `noxus-sdk`. Prefer stdlib over a 50 kB wheel.
+  exactly one version of `noxus-sdk`. Prefer stdlib over a 50 kB
+  wheel.
 - **Update `CHANGELOG.md` on every change.** Append under
   `## [Unreleased]`. Sections: `### Added`, `### Changed`, `### Fixed`,
   `### Removed`. No exceptions for "small" changes.
-- **No Docker.** This is a Python CLI; `pip install` and `make setup`
-  cover all targets. A Dockerfile would be a DX regression.
+- **No Docker, no Make.** This is a Python CLI. `pip install`
+  + `noxuslab init` is the only path. Wrappers are a DX regression.
 
 ## Style
 
@@ -55,8 +57,8 @@ If a piece of logic appears twice in `examples/`, it is a candidate for
 
 ## Workflow
 
-    make setup
-    make lint && make test
+    pip install -e ".[dev]"
+    ruff check . && pytest
     git switch -c feat/<short>
     # ...code...
     pre-commit run --all-files
@@ -135,9 +137,9 @@ Rules of engagement:
 
 A change is done only when:
 
-1. `make lint` is green.
-2. `make test` is green and coverage ≥ 70%.
-3. `make typecheck` (pyright) is green.
+1. `ruff check .` is green.
+2. `pytest` is green and coverage ≥ 70%.
+3. `pyright` is green.
 4. `CHANGELOG.md` is updated.
 5. The Conventional Commit message is written.
 6. The user-visible behaviour was exercised at least once

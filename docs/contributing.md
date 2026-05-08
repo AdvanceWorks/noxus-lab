@@ -7,36 +7,36 @@ read [AGENTS.md](../AGENTS.md) once before you start.
 
     git clone https://github.com/AdvanceWorks/noxus-lab
     cd noxus-lab
-    make setup
-    cp .env.example .env && $EDITOR .env   # set NOXUS_API_KEY
+    python -m venv .venv
+    . .venv/Scripts/activate     # or `. .venv/bin/activate` on Unix
+    pip install -e ".[dev]"
     pre-commit install
+    cp .env.example .env         # set NOXUS_API_KEY for live tests
 
 ## Loop
 
-    make lint        # ruff
-    make test        # pytest
-    make typecheck   # pyright (warning-only)
+    ruff check .                 # lint
+    ruff format .                # format
+    pytest                       # tests + coverage gate
+    pyright                      # type-check (warning-only)
 
 Tests are offline by default. Anything that talks to the live Noxus
 backend must be marked `@pytest.mark.smoke` and skipped when
 `NOXUS_API_KEY` is unset.
 
+## Regenerating lock files
+
+    pip install pip-tools
+    pip-compile --generate-hashes -o requirements.lock pyproject.toml
+    pip-compile --generate-hashes --extra=dev -o requirements-dev.lock pyproject.toml
+
+Commit both `.lock` files together with the `pyproject.toml` change.
+
 ## PR checklist
 
-- [ ] One topic per PR. Conventional Commit title (`feat:`, `fix:`, etc).
-- [ ] `make lint && make test` clean locally.
+- [ ] One topic per PR. Conventional Commit title (`feat:`, `fix:`,
+      `chore:`, `docs:`, `refactor:`, `test:`, `ci:`).
+- [ ] `ruff check .` and `pytest` clean locally.
+- [ ] `CHANGELOG.md` updated under `## [Unreleased]`.
 - [ ] Docs/README updated if user-facing.
 - [ ] No `.env`, no API keys, no PII in diffs (gitleaks runs in CI).
-
-## Releases
-
-Tag `vMAJOR.MINOR.PATCH` from `main`. The release workflow
-([release.yml](../.github/workflows/release.yml)) builds the wheel and
-opens a GitHub release with auto-generated notes. Bump
-`pyproject.toml` and `noxuslab/__init__.py` in the same commit.
-
-## Communication
-
-- Bug or unexpected behaviour: open an issue with the *Bug* template.
-- Feature idea: open an issue with the *Feature* template before coding.
-- Security: email **luis.tunes@advanceworks.ai** — see [security.md](security.md).

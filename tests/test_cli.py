@@ -116,15 +116,3 @@ def test_show_rejects_bad_id(capsys):
     rc = main(["show", "garbage"])
     assert rc == 1
     assert "not a uuid" in capsys.readouterr().err
-
-
-def test_init_with_makefile_copies_makefile(tmp_path: Path):
-    target = tmp_path / "scaffold"
-    rc = main(["init", str(target), "--with-makefile"])
-    assert rc == 0
-    assert (target / "Makefile").is_file()
-    assert (target / "bin").is_dir()
-    assert (target / ".noxuslab-template-version").is_file()
-    readme = (target / "README.md").read_text(encoding="utf-8")
-    assert "make setup" in readme
-    assert "noxuslab doctor" not in readme
