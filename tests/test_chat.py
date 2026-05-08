@@ -5,8 +5,10 @@ from unittest.mock import MagicMock, patch
 from noxuslab.chat import _create_conversation, _make_client, _stream_reply, one_shot
 
 
-def test_make_client_raises_without_key(monkeypatch):
+def test_make_client_raises_without_key(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("NOXUS_API_KEY", raising=False)
+    monkeypatch.delenv("NOXUSLAB_SECRETS_CMD", raising=False)
     import pytest
 
     from noxuslab.errors import AuthMissing

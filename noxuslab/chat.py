@@ -7,15 +7,14 @@ from dotenv import load_dotenv
 
 from noxuslab._net import call as net_call
 from noxuslab._term import bold, dim, green
-from noxuslab.errors import AuthMissing
 
 
 def _make_client():
     from noxus_sdk.client import Client
 
-    key = os.environ.get("NOXUS_API_KEY")
-    if not key:
-        raise AuthMissing("NOXUS_API_KEY not set (check .env)")
+    from noxuslab._secrets import resolve_api_key
+
+    key = resolve_api_key()
     kwargs: dict = {"api_key": key}
     url = os.environ.get("NOXUS_BACKEND_URL")
     if url:

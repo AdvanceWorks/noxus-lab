@@ -6,6 +6,13 @@ and [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `NOXUSLAB_SECRETS_CMD` — pluggable secret resolver. Set it to a
+  shell command (e.g. `aws secretsmanager get-secret-value --query
+  SecretString --output text --secret-id ...`) and `noxuslab` will
+  fetch the API key on demand. Production deployments need not write
+  the key to disk.
+- `noxuslab._secrets.resolve_api_key()` — env > .env > command, with
+  typed errors. Used by both `cli.py` and `chat.py`.
 - `noxuslab diff <workflow_id> <file>` — unified diff between the
   server's current canonical Python and a local file. Exit 0 on
   identical, exit 1 on differences. `make diff ID=... FILE=...` wraps

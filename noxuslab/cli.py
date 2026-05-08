@@ -37,7 +37,9 @@ _UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 def _client():
     from noxus_sdk.client import Client
 
-    kwargs: dict = {"api_key": os.environ["NOXUS_API_KEY"]}
+    from noxuslab._secrets import resolve_api_key
+
+    kwargs: dict = {"api_key": resolve_api_key()}
     url = os.environ.get("NOXUS_BACKEND_URL")
     if url:
         kwargs["base_url"] = url
