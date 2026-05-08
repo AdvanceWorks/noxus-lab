@@ -13,7 +13,7 @@ endif
 
 TOPIC ?= octopus cognition
 
-.PHONY: help setup hello run kb chat ask list agents pull push lint fmt test typecheck ci clean new template-update lock
+.PHONY: help setup hello run kb chat ask list agents pull push diff lint fmt test typecheck ci clean new template-update lock
 
 help:
 	@echo 'use:'
@@ -30,6 +30,7 @@ help:
 	@echo 'sync:'
 	@echo '  pull ID=<id>     fetch a workflow as a Python file under examples/'
 	@echo '  push FILE=<p>    save a Python-defined workflow back to Noxus'
+	@echo '  diff ID=<id> FILE=<p>  show server-vs-local diff before push'
 	@echo ''
 	@echo 'dev:'
 	@echo '  setup            create .venv, install deps, seed .env'
@@ -76,6 +77,11 @@ pull:
 push:
 	@test -n "$(FILE)" || (echo 'usage: make push FILE=examples/NN_x.py' >&2; exit 2)
 	$(NOXUSLAB) push $(FILE)
+
+diff:
+	@test -n "$(ID)" || (echo 'usage: make diff ID=<workflow_id> FILE=examples/NN_x.py' >&2; exit 2)
+	@test -n "$(FILE)" || (echo 'usage: make diff ID=<workflow_id> FILE=examples/NN_x.py' >&2; exit 2)
+	$(NOXUSLAB) diff $(ID) $(FILE)
 
 lint:
 	sh bin/lint

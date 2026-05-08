@@ -169,6 +169,43 @@ def cmd_agents(_args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_diff(args: argparse.Namespace) -> int:
+    """Show what `noxuslab push <file>` would change on the server.
+
+    Pulls the current server state for the workflow, generates the
+    canonical Python form, and unified-diffs it against `<file>`.
+    Exits 0 if no differences, 1 if differences exist.
+    """
+    import difflib as _difflib
+
+    path = Path(args.file)
+    if not path.is_file():
+        raise BadFile(f"not found: {path}")
+    _check_id(args.workflow_id)
+    load_dotenv()
+    client = _client()
+    wf = net_call(
+        lambda: client.workflows.get(workflow_id=args.workflow_id),
+        what="diff workflow",
+    )
+    server_code = workflow_to_python(wf, source_id=args.workflow_id)
+    local_code = path.read_text(encoding="utf-8")
+    diff = list(
+        _difflib.unified_diff(
+            server_code.splitlines(keepends=True),
+            local_code.splitlines(keepends=True),
+            fromfile=f"server:{args.workflow_id}",
+            tofile=f"local:{path}",
+            n=3,
+        )
+    )
+    if not diff:
+        print("identical")
+        return 0
+    sys.stdout.writelines(diff)
+    return 1
+
+
 def cmd_chat(args: argparse.Namespace) -> int:
     from noxuslab.chat import start_chat
 
@@ -214,6 +251,11 @@ def main(argv: list[str] | None = None) -> int:
     pi.set_defaults(func=cmd_init)
 
     sub.add_parser("agents", help="list agents in the workspace").set_defaults(func=cmd_agents)
+
+    pd = sub.add_parser("diff", help="show what `push <file>` would change")
+    pd.add_argument("workflow_id")
+    pd.add_argument("file")
+    pd.set_defaults(func=cmd_diff)
 
     pc = sub.add_parser("chat", help="interactive conversation with a Noxus agent")
     pc.add_argument("-a", "--agent", help="agent id to attach to")
