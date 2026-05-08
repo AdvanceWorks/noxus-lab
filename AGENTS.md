@@ -1,4 +1,4 @@
-# AGENTS.md — rules for AI assistants and contributors
+# AGENTS.md — operating contract for AI assistants and contributors
 
 This file is the contract every contributor (human or LLM) follows when
 touching the repo. Read it once. It is short on purpose.
@@ -27,26 +27,31 @@ If a piece of logic appears twice in `examples/`, it is a candidate for
   resources; let the user clean up via the UI or `make`.
 - **Conventional Commits.** `feat:`, `fix:`, `chore:`, `docs:`,
   `refactor:`, `test:`, `ci:`. One topic per commit.
-- **Lint clean.** `make lint` must pass. `make test` must pass. CI
-  enforces both on three OSes and three Python versions.
+- **Lint and test clean.** `make lint` and `make test` must pass
+  locally before every commit. CI enforces both on three OSes ×
+  three Python versions.
+- **Coverage gate ≥ 70%.** `pytest --cov-fail-under=70` is wired into
+  the test command. New modules ship with at least one offline test.
 - **Don't add a dependency without need.** Justify in the PR. Pin
-  exactly one version of `noxus-sdk`.
-- **Update CHANGELOG on every change.** Every commit that ships
-  user-visible behaviour appends a bullet under `## [Unreleased]` in
-  `CHANGELOG.md`. Sections: `### Added`, `### Changed`, `### Fixed`,
-  `### Removed`. AI assistants must do this automatically — no
-  exceptions for "small" changes.
+  exactly one version of `noxus-sdk`. Prefer stdlib over a 50 kB wheel.
+- **Update `CHANGELOG.md` on every change.** Append under
+  `## [Unreleased]`. Sections: `### Added`, `### Changed`, `### Fixed`,
+  `### Removed`. No exceptions for "small" changes.
 - **No Docker.** This is a Python CLI; `pip install` and `make setup`
-  cover all targets. Adding a Dockerfile is a regression in DX.
+  cover all targets. A Dockerfile would be a DX regression.
 
 ## Style
 
 - **Examples**: shebang, 1-line docstring with the invocation, top-level
   script, `print` for output. Target ≤ 80 lines.
-- **Package code**: explicit imports, type hints on public APIs, no
-  exceptions for "just in case". Validate at boundaries only.
+- **Package code**: explicit imports, type hints on public APIs,
+  validate at boundaries only, no defensive `try/except` for cases that
+  cannot happen.
 - **Naming**: `snake_case` files, `PascalCase` classes, lowercase
   example prefixes (`NN_short_name.py`).
+- **Neutral tone.** Do not pitch ideas by name-dropping famous people
+  or with marketing words like "godlike". Describe what the change
+  does and why it matters.
 
 ## Workflow
 
@@ -64,32 +69,94 @@ Conventional Commits. PRs require a green CI before merge.
 
 ## Extending noxus-lab
 
-You have three good entry points:
+Three good entry points:
 
 1. **Add an example.** Pick the next free `NN_` prefix under
-   `examples/`. Mirror the style of existing ones. If your idea needs a
-   helper that other scripts could share, propose it for `noxuslab/`.
+   `examples/`. Mirror the style of existing scripts. If your idea
+   needs a helper that other scripts could share, promote it to
+   `noxuslab/`.
 2. **Improve the codegen.** `noxuslab.codegen.workflow_to_python`
    produces Python from a `WorkflowDefinition`. Edge cases live in
    `tests/test_codegen.py`. Add a failing test before changing the
    generator.
-3. **Add a CLI subcommand.** `noxuslab` lives in `noxuslab/cli.py`. New
-   subcommands subclass nothing — just add a parser branch. Keep
-   side-effects out of import time.
+3. **Add a CLI subcommand.** `noxuslab` lives in `noxuslab/cli.py`.
+   New subcommands add one parser branch + one `cmd_<name>` function.
+   Keep side-effects out of import time — lazy-import heavy deps
+   inside the function.
 
-For deeper changes (new SDK abstraction, a new package under
+For deeper changes (new SDK abstraction, new package under
 `noxuslab/`), open an issue first.
+
+## AI assistants — operating procedure
+
+Treat this as a checklist for every non-trivial change.
+
+### 1. Plan before touching code
+
+- Read the file you intend to change before editing it.
+- For multi-step work, write the plan as a TODO list and update it as
+  you go. Single-step edits do not need ceremony.
+- Pick the smallest scope that satisfies the request. Out-of-scope
+  refactors live in their own commit.
+
+### 2. Use subagents for read-only exploration
+
+- Spawn the **`Explore`** subagent (via `runSubagent`) when you need
+  to read more than ~5 files or grep widely. The subagent returns one
+  message — your conversation stays clean.
+- Run independent subagents in parallel. Each is stateless; pass full
+  context in the prompt.
+- Do **not** ask a subagent to write code unless explicitly delegated.
+- Pick thoroughness on purpose: `quick` for a single fact, `medium`
+  for a feature audit, `thorough` only for repo-wide design questions.
+
+### 3. Edit with intent
+
+- Prefer `multi_replace_string_in_file` when changing several files
+  in the same logical step.
+- Always include 3–5 lines of context above and below the edit anchor.
+- After editing, run `ruff check . && ruff format . && pytest -q` and
+  fix issues immediately. Do not chase a broken build with more edits.
+
+### 4. Verify before claiming done
+
+A change is done only when:
+
+1. `make lint` is green.
+2. `make test` is green and coverage ≥ 70%.
+3. `make typecheck` (pyright) is green.
+4. `CHANGELOG.md` is updated.
+5. The Conventional Commit message is written.
+6. The user-visible behaviour was exercised at least once
+   (`python -m noxuslab <subcommand> --help` for new CLI surface).
+
+### 5. Commit + push
+
+- Run `pre-commit run --all-files` (or trust the git hook).
+- One commit per topic. Never use `--no-verify`.
+- For releases, bump version in three places:
+  `noxuslab/__init__.py`, `pyproject.toml`, the install snippet in
+  `README.md`. Add a `[X.Y.Z]` heading + comparison link at the
+  bottom of `CHANGELOG.md`. Tag `vX.Y.Z` and push the tag.
+
+### 6. Memory hygiene
+
+- `/memories/` is loaded into context on every turn — keep it terse.
+- `/memories/preferences.md` records hard user preferences (what to
+  avoid, output style). Read it before generating prose.
+- Use `/memories/session/` for one-conversation scratch. Do not
+  promote session notes to user memory unless the insight is durable.
+
+### 7. When stuck
+
+Read the SDK source under `.venv/Lib/site-packages/noxus_sdk/` — it is
+small and the answer is usually there. If still stuck, leave a `TODO:`
+in the code and open an issue. Do not invent API shapes.
 
 ## Out of scope
 
 - Re-implementing the SDK or backend.
-- A web UI for this lab.
 - Multi-tenant support — one API key per workspace, full stop.
-- Translating prose to PT/ES.
 - Auto-publishing or auto-deleting platform resources.
-
-## When the agent is stuck
-
-Read the SDK source under `.venv/Lib/site-packages/noxus_sdk/`. It is
-small and the answer is usually there. If still stuck, leave a TODO and
-open an issue using the template — do not invent API shapes.
+- Translating prose to PT/ES (English-only is a hard rule).
+- Replacing the CLI with a GUI as the primary interface.

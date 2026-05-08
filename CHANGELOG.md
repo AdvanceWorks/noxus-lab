@@ -5,40 +5,60 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-08
+
+### Added
+- **`noxuslab fmt <file>...`** — format-in-place for workflow files.
+  Same renderer as `pull`, but loads each file with the SDK `Client`
+  stubbed (no network), regenerates the canonical Python, and rewrites
+  the file. Flags: `--check` (exit 1 if any file would change) and
+  `--diff` (preview without writing). The workflow analogue of
+  `ruff format`.
+- **`noxuslab portal`** — read-only HTML dashboard at
+  `http://127.0.0.1:7890`. Lists workflows and agents with one-click
+  copy-to-clipboard for ids. Built on the stdlib `http.server`, no
+  extra dependency. Refuses to bind on non-loopback hosts. Auto-opens
+  the default browser unless `--no-open`.
+- Tests: `tests/test_fmt_portal.py` covers fmt idempotence/check/diff
+  and portal HTML rendering, handler routing, and loopback rejection.
+
+### Changed
+- **AGENTS.md rewritten** as an operating contract for both humans and
+  AI assistants. New sections: hard rules, neutral-tone clause in
+  style, AI assistants operating procedure (plan → subagents →
+  edit → verify → commit → memory hygiene → when stuck).
+- Documentation, tests, and changelog scrubbed of motivational
+  language and name-dropping. `tests/test_godlike.py` renamed to
+  `tests/test_features.py`.
+
 ## [0.5.0] — 2026-05-08
 
 ### Added
-- **`noxuslab watch <file>`** — hot-push on every save (godlike #4).
-  Polls the file's mtime in a stdlib loop (no `watchdog` dep). First
-  push happens immediately; subsequent saves push in <1s with a
-  timestamp + elapsed-ms confirmation. Ctrl+C to stop.
+- **`noxuslab watch <file>`** — hot-push on every save. Polls the
+  file's mtime in a stdlib loop (no `watchdog` dep). First push happens
+  immediately; subsequent saves push in <1s with a timestamp +
+  elapsed-ms confirmation. Ctrl+C to stop.
 - **`noxuslab gen "<prompt>"`** — generate a workflow Python file from
-  a natural-language description (godlike #6). Wraps a Noxus
-  conversation with a strict system prompt, strips markdown fences,
-  writes to `examples/NN_<slug>.py` (or `--out`). Output is ready for
+  a natural-language description. Wraps a Noxus conversation with a
+  strict system prompt, strips markdown fences, writes to
+  `examples/NN_<slug>.py` (or `--out`). Output is ready for
   `noxuslab push <file>`.
-- **`noxuslab init --interactive`** — first-run wizard (godlike #2).
-  Auto-detects TTY; prompts for API key (hidden via `getpass`) and
-  optional backend URL; writes `.env` with `chmod 600`. Use
-  `--no-interactive` for unattended scaffolding.
+- **`noxuslab init --interactive`** — first-run wizard. Auto-detects
+  TTY; prompts for API key (hidden via `getpass`) and optional backend
+  URL; writes `.env` with `chmod 600`. Use `--no-interactive` for
+  unattended scaffolding.
 - **`noxuslab diff --visual`** — side-by-side Mermaid graphs for
-  server vs local workflow (godlike #10). Paste into any Mermaid
-  renderer (GitHub, mermaid.live, VS Code) for a visual review. New
-  module `noxuslab.graph` with `to_mermaid()` helper.
+  server vs local workflow. Paste into any Mermaid renderer (GitHub,
+  mermaid.live, VS Code) for a visual review. New module
+  `noxuslab.graph` with `to_mermaid()` helper.
 - **HTTPS audit sinks** — `NOXUSLAB_AUDIT_LOG` now accepts `https://`
-  URLs (godlike #8). Slack-style hooks (`hooks.slack.com`) get a
-  `{"text": ...}` wrapper; other URLs receive the raw JSON record.
-  Best-effort, 1s timeout, silent on failure. File sinks unchanged.
+  URLs. Slack-style hooks (`hooks.slack.com`) get a `{"text": ...}`
+  wrapper; other URLs receive the raw JSON record. Best-effort, 1s
+  timeout, silent on failure. File sinks unchanged.
 - `noxuslab gen` is added to the audit redaction set (free-form prompts
   never logged).
-- Tests: `tests/test_godlike.py` covers `gen`, `graph`, audit sinks,
+- Tests: `tests/test_features.py` covers `gen`, `graph`, audit sinks,
   and `watch` boundary conditions. Coverage 71%.
-
-### Notes
-- Five godlike improvements deferred (need separate projects or heavy
-  infra): #1 native installer (`.msi`/`.dmg`), #3 `textual` TUI,
-  #5 VS Code extension, #7 `noxuslab portal` (FastAPI dashboard),
-  #9 `noxuslab fmt` (workflow AST normaliser).
 
 ## [0.4.0] — 2026-05-08
 
@@ -208,7 +228,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.1...v0.3.2

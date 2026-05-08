@@ -1,4 +1,4 @@
-"""Offline tests for the new godlike features (gen, watch, graph, audit sinks, init wizard)."""
+"""Offline tests for v0.5+ features (gen, watch, graph, audit sinks, init wizard)."""
 
 from __future__ import annotations
 

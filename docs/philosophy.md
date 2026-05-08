@@ -42,7 +42,7 @@ is no.
 - **No Docker.** This is a Python CLI. `pip install noxuslab` and
   `make setup` work on Linux, macOS, and Windows (Git Bash). A
   Dockerfile would add a 200 MB layer for a tool that fits in
-  500 lines. Ken Thompson didn't ship `cat` in a container.
+  500 lines. A coreutils-grade tool doesn't need its own runtime.
 - **No build step.** Hatchling is the build backend; the source is
   the artifact. No transpiler, no bundler, no codegen pre-pass.
 - **No optional features behind feature flags.** If it's worth

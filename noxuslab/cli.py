@@ -308,6 +308,18 @@ def cmd_gen(args: argparse.Namespace) -> int:
     return generate(prompt, agent_id=args.agent, model=args.model, out=args.out)
 
 
+def cmd_fmt(args: argparse.Namespace) -> int:
+    from noxuslab.fmt import fmt
+
+    return fmt(args.files, check=args.check, show_diff=args.diff)
+
+
+def cmd_portal(args: argparse.Namespace) -> int:
+    from noxuslab.portal import serve as portal_serve
+
+    return portal_serve(host=args.host, port=args.port, open_browser=not args.no_open)
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="noxuslab", description=__doc__)
     p.add_argument("-V", "--version", action="version", version=f"noxuslab {__version__}")
@@ -395,6 +407,18 @@ def main(argv: list[str] | None = None) -> int:
     pg.add_argument("-m", "--model", help="model name (default: gemini-2.5-flash)")
     pg.add_argument("-o", "--out", help="output path (default: examples/NN_<slug>.py)")
     pg.set_defaults(func=cmd_gen)
+
+    pf = sub.add_parser("fmt", help="canonicalise a workflow file (round-trip through codegen)")
+    pf.add_argument("files", nargs="+", help="one or more .py files")
+    pf.add_argument("--check", action="store_true", help="exit 1 if any file would be reformatted")
+    pf.add_argument("--diff", action="store_true", help="print unified diff, do not write")
+    pf.set_defaults(func=cmd_fmt)
+
+    pp_portal = sub.add_parser("portal", help="start a local read-only HTML dashboard on 127.0.0.1")
+    pp_portal.add_argument("--host", default="127.0.0.1", help="loopback address (127.0.0.1 only)")
+    pp_portal.add_argument("--port", type=int, default=7890, help="TCP port (default 7890)")
+    pp_portal.add_argument("--no-open", action="store_true", help="don't auto-open the browser")
+    pp_portal.set_defaults(func=cmd_portal)
 
     known = {a.dest for a in sub._choices_actions}  # type: ignore[attr-defined]
     if argv and argv[0] not in known and not argv[0].startswith("-"):
