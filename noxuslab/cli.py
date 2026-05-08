@@ -218,6 +218,143 @@ def cmd_agents(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _next_agent_path(name_slug: str) -> Path:
+    """Mirror `_next_example_path` for agents under `agents/`."""
+    out_dir = Path("agents")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    used = [int(m.group(1)) for p in out_dir.glob("*.py") if (m := re.match(r"^(\d{2})_", p.name))]
+    nxt = (max(used) + 1) if used else 1
+    return out_dir / f"{nxt:02d}_{name_slug}.py"
+
+
+def cmd_agents_list(_args: argparse.Namespace) -> int:
+    return cmd_agents(_args)
+
+
+def cmd_agents_pull(args: argparse.Namespace) -> int:
+    """Fetch one agent and emit a self-contained Python file."""
+    from noxuslab.agent_codegen import agent_to_python
+
+    load_dotenv()
+    client = _client()
+    agent = net_call(lambda: client.agents.get(args.agent_id), what="pull agent")
+    code = agent_to_python(agent, source_id=args.agent_id)
+    if args.out == "-":
+        sys.stdout.write(code)
+        return 0
+    out = Path(args.out) if args.out else _next_agent_path(_slug(agent.name))
+    if out.exists() and not args.force:
+        raise BadFile(f"refusing to overwrite {out} (use --force)")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(code, encoding="utf-8")
+    print(out)
+    return 0
+
+
+def _load_agent_file(path: Path) -> tuple[str, object, str | None]:
+    """Run an agent file with `Client` stubbed; return (name, settings, id?).
+
+    Stubbing means we never make an HTTP call during the load — only the
+    three module-level variables matter.
+    """
+    if not path.is_file():
+        raise BadFile(f"not found: {path}")
+
+    import noxus_sdk.client as _sdk_client
+
+    real_client = _sdk_client.Client
+
+    class _StubClient:
+        def __init__(self, *_a, **_k) -> None:
+            self.nodes = []
+            self.agents = self
+            self.workflows = self
+
+        def __getattr__(self, _name):
+            return lambda *a, **k: None
+
+    _sdk_client.Client = _StubClient  # type: ignore[assignment]
+    try:
+        ns = runpy.run_path(str(path), run_name="_noxuslab_agent_push")
+    finally:
+        _sdk_client.Client = real_client  # type: ignore[assignment]
+
+    name = ns.get("agent_name")
+    settings = ns.get("agent_settings")
+    agent_id = ns.get("agent_id") or None
+    if not isinstance(name, str) or not name:
+        raise BadFile(f"{path}: missing or empty `agent_name`")
+    if settings is None:
+        raise BadFile(f"{path}: missing `agent_settings` (ConversationSettings instance)")
+    return name, settings, agent_id
+
+
+def cmd_agents_push(args: argparse.Namespace) -> int:
+    """Create or update an agent from a Python file."""
+    load_dotenv()
+    path = Path(args.path)
+    name, settings, agent_id = _load_agent_file(path)
+    if args.dry_run:
+        n_tools = len(getattr(settings, "tools", []) or [])
+        kind = "update" if agent_id else "create"
+        print(f"ok: would {kind} '{name}' with {n_tools} tool(s)")
+        return 0
+    client = _client()
+    if agent_id:
+        result_id = net_call(
+            lambda: client.agents.update(agent_id, name=name, settings=settings).id,
+            what="update agent",
+        )
+    else:
+        result_id = net_call(
+            lambda: client.agents.create(name, settings).id,
+            what="create agent",
+        )
+    print(result_id)
+    return 0
+
+
+def cmd_agents_diff(args: argparse.Namespace) -> int:
+    """Diff a local agent file against the server state. Exit 1 on diff."""
+    from noxuslab.agent_codegen import agent_to_python
+
+    path = Path(args.file)
+    if not path.is_file():
+        raise BadFile(f"not found: {path}")
+    _check_id(args.agent_id)
+    load_dotenv()
+    client = _client()
+    agent = net_call(lambda: client.agents.get(args.agent_id), what="diff agent")
+    server_code = agent_to_python(agent, source_id=args.agent_id)
+    local_code = path.read_text(encoding="utf-8")
+    diff = list(
+        difflib.unified_diff(
+            server_code.splitlines(keepends=True),
+            local_code.splitlines(keepends=True),
+            fromfile=f"server:{args.agent_id}",
+            tofile=f"local:{path}",
+            n=3,
+        )
+    )
+    if not diff:
+        print("identical")
+        return 0
+    sys.stdout.writelines(diff)
+    return 1
+
+
+def cmd_agents_delete(args: argparse.Namespace) -> int:
+    """Delete an agent on the server. Requires `--yes` (destructive)."""
+    _check_id(args.agent_id)
+    if not args.yes:
+        raise BadFile("refusing to delete without --yes (this is destructive)")
+    load_dotenv()
+    client = _client()
+    net_call(lambda: client.agents.delete(args.agent_id), what="delete agent")
+    print(f"deleted {args.agent_id}")
+    return 0
+
+
 def cmd_diff(args: argparse.Namespace) -> int:
     """Show what `noxuslab push <file>` would change on the server.
 
@@ -355,7 +492,37 @@ def main(argv: list[str] | None = None) -> int:
     )
     pi.set_defaults(func=cmd_init)
 
-    sub.add_parser("agents", help="list agents in the workspace").set_defaults(func=cmd_agents)
+    pag = sub.add_parser(
+        "agents",
+        help="manage Noxus agents (list / pull / push / diff / delete)",
+    )
+    pag.set_defaults(func=cmd_agents)  # bare `noxuslab agents` = list
+    pag_sub = pag.add_subparsers(dest="agents_cmd", required=False)
+
+    pag_sub.add_parser("list", help="list agents in the workspace").set_defaults(
+        func=cmd_agents_list
+    )
+
+    pag_pull = pag_sub.add_parser("pull", help="fetch an agent and emit a Python file")
+    pag_pull.add_argument("agent_id")
+    pag_pull.add_argument("-o", "--out", help="output path; '-' for stdout")
+    pag_pull.add_argument("-f", "--force", action="store_true", help="overwrite existing file")
+    pag_pull.set_defaults(func=cmd_agents_pull)
+
+    pag_push = pag_sub.add_parser("push", help="create or update an agent from a Python file")
+    pag_push.add_argument("path")
+    pag_push.add_argument("--dry-run", action="store_true", help="parse + validate, don't save")
+    pag_push.set_defaults(func=cmd_agents_push)
+
+    pag_diff = pag_sub.add_parser("diff", help="diff a local agent file vs the server")
+    pag_diff.add_argument("agent_id")
+    pag_diff.add_argument("file")
+    pag_diff.set_defaults(func=cmd_agents_diff)
+
+    pag_del = pag_sub.add_parser("delete", help="delete an agent on the server")
+    pag_del.add_argument("agent_id")
+    pag_del.add_argument("--yes", action="store_true", help="confirm destructive delete")
+    pag_del.set_defaults(func=cmd_agents_delete)
 
     pd = sub.add_parser("diff", help="show what `push <file>` would change")
     pd.add_argument("workflow_id")

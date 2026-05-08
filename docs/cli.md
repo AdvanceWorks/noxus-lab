@@ -72,9 +72,23 @@ and unified-diffs it against your local file. Exits **0** if identical,
 
 ## agents
 
-    noxuslab agents                    # id  name
+    noxuslab agents                          # list (id  name)
+    noxuslab agents list                     # explicit form
+    noxuslab agents pull <id>                # writes agents/NN_<slug>.py
+    noxuslab agents pull <id> -o my_a.py     # explicit out path
+    noxuslab agents pull <id> -o -           # to stdout
+    noxuslab agents push my_a.py             # create or update
+    noxuslab agents push my_a.py --dry-run   # validate, don't save
+    noxuslab agents diff <id> my_a.py        # exit 1 if differs
+    noxuslab agents delete <id> --yes        # destructive, requires --yes
 
-Lists agents in the workspace. Use the id with `chat -a` or `ask -a`.
+The pulled file is a single self-contained script with three top-level
+variables: `agent_name` (str), `agent_id` (str — remove or set empty to
+force creating a NEW agent on push), and `agent_settings`
+(`ConversationSettings`). Push runs the file with the SDK `Client`
+stubbed (no network), reads those three variables, then calls
+`client.agents.update(...)` if `agent_id` is set or
+`client.agents.create(...)` otherwise.
 
 ## chat, ask
 

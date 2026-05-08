@@ -5,6 +5,32 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-05-08
+
+### Added
+- **`noxuslab agents pull|push|diff|delete`** — full CRUD for Noxus
+  agents, mirroring the workflow toolkit:
+  - `agents pull <id>` writes a self-contained Python file under
+    `agents/NN_<slug>.py` (override with `-o`, `-` for stdout). The
+    file carries a provenance header and serialises
+    `ConversationSettings` as JSON for diff-friendly round-tripping.
+  - `agents push <file>` runs the file with the SDK `Client` stubbed
+    (no network), reads `agent_name` / `agent_settings` /
+    optional `agent_id`, and calls update or create accordingly.
+    `--dry-run` validates without saving.
+  - `agents diff <id> <file>` exit 0 if identical, 1 otherwise.
+  - `agents delete <id> --yes` (refuses without `--yes` — destructive).
+- New module `noxuslab.agent_codegen` with `agent_to_python(agent,
+  source_id=...)`.
+- Tests: `tests/test_agents.py` covers codegen, round-trip load,
+  guard rails (missing `agent_name`/`agent_settings`/path),
+  default-path pull, and delete confirmation.
+
+### Changed
+- Bare `noxuslab agents` keeps its original meaning (list agents) but
+  is now a parser group exposing `list`, `pull`, `push`, `diff`,
+  `delete`.
+
 ## [0.6.0] — 2026-05-08
 
 ### Added
@@ -228,7 +254,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.2...v0.4.0
