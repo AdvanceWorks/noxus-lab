@@ -13,7 +13,7 @@ endif
 
 TOPIC ?= octopus cognition
 
-.PHONY: help setup hello run kb chat ask list agents pull push lint fmt test typecheck ci clean new template-update
+.PHONY: help setup hello run kb chat ask list agents pull push lint fmt test typecheck ci clean new template-update lock
 
 help:
 	@echo 'use:'
@@ -41,6 +41,7 @@ help:
 	@echo '  clean            remove venv and caches'
 	@echo '  new NAME=<dir>   scaffold a new project from this template'
 	@echo '  template-update  pull updates from the upstream template'
+	@echo '  lock             regenerate requirements.lock files'
 
 setup:
 	sh bin/setup
@@ -96,6 +97,9 @@ clean:
 new:
 	@test -n "$(NAME)" || (echo 'usage: make new NAME=my-project' >&2; exit 2)
 	$(NOXUSLAB) init --with-makefile $(NAME)
+
+lock:
+	sh bin/lock
 
 template-update:
 	@if [ ! -f .noxuslab-template-version ]; then \

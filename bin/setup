@@ -27,7 +27,14 @@ else
 fi
 
 "$vpy" -m pip install --upgrade --quiet pip
-"$vpy" -m pip install --quiet -e ".[dev]"
+# Use the lock file when LOCKED=1 (production / CI). Otherwise install
+# from pyproject for fast iteration during dev.
+if [ "${LOCKED:-0}" = "1" ] && [ -f requirements-dev.lock ]; then
+	"$vpy" -m pip install --quiet --require-hashes -r requirements-dev.lock
+	"$vpy" -m pip install --quiet --no-deps -e .
+else
+	"$vpy" -m pip install --quiet -e ".[dev]"
+fi
 
 # Wire git hooks so contributors run the same checks CI does.
 if [ -d .git ]; then
