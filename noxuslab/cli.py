@@ -221,6 +221,16 @@ def cmd_ask(args: argparse.Namespace) -> int:
     return one_shot(question, agent_id=args.agent, model=args.model)
 
 
+def cmd_mcp_serve(args: argparse.Namespace) -> int:
+    """Run the noxuslab MCP server. Blocks forever (stdio loop)."""
+    try:
+        from noxuslab.mcp import serve
+    except ImportError as e:
+        raise NoxusLabError("mcp extras not installed. Run: pip install 'noxuslab[mcp]'") from e
+    serve(transport=args.transport)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="noxuslab", description=__doc__)
     p.add_argument("-V", "--version", action="version", version=f"noxuslab {__version__}")
@@ -267,6 +277,19 @@ def main(argv: list[str] | None = None) -> int:
     pa.add_argument("-a", "--agent", help="agent id to attach to")
     pa.add_argument("-m", "--model", help="model name (default: gemini-2.5-flash)")
     pa.set_defaults(func=cmd_ask)
+
+    pm = sub.add_parser(
+        "mcp", help="run noxuslab as an MCP server (Claude Desktop, Cursor, VS Code)"
+    )
+    pm_sub = pm.add_subparsers(dest="mcp_cmd", required=True)
+    pm_serve = pm_sub.add_parser("serve", help="start the MCP server")
+    pm_serve.add_argument(
+        "--transport",
+        default="stdio",
+        choices=["stdio", "sse"],
+        help="transport (default: stdio)",
+    )
+    pm_serve.set_defaults(func=cmd_mcp_serve)
 
     known = {a.dest for a in sub._choices_actions}  # type: ignore[attr-defined]
     if argv and argv[0] not in known and not argv[0].startswith("-"):

@@ -37,7 +37,7 @@ edit and `push` back. The package stays small on purpose — see
 ## install
 
     # CLI only, drop into any existing project:
-    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.3.2
+    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.4.0
 
     # or, full template:
     # click 'Use this template' on github.com/AdvanceWorks/noxus-lab

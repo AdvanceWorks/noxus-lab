@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "noxuslab"
-version = "0.3.2"
+version = "0.4.0"
 description = "A terse sandbox and CLI for the Noxus AI Python SDK."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,6 +35,7 @@ dev = [
   "pytest-cov>=5.0",
   "pytest-mock>=3.12",
   "hypothesis>=6.100",
+  "mcp>=1.0",
 ]
 mcp = [
   "mcp>=1.0",

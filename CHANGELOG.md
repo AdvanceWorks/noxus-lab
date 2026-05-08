@@ -5,6 +5,22 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-05-08
+
+### Added
+- **`noxuslab mcp serve`** — run noxuslab as an MCP server. Plug into
+  Claude Desktop, Cursor, or VS Code Copilot and ask the LLM
+  *"list my noxus workflows"*, *"pull workflow abc-123 to a file"*,
+  *"diff this file against the server"*, *"ask my agent about X"*.
+  Five high-level tools: `list_workflows`, `list_agents`,
+  `pull_workflow`, `diff_workflow`, `ask_agent`. All go through the
+  same retry / audit / secrets layers as the CLI.
+- `noxuslab/mcp.py` module + `tests/test_mcp.py` (4 offline tests).
+- `docs/mcp.md` rewritten to compare `noxuslab mcp serve` (5 high-level
+  tools, day-to-day) vs `noxus mcp serve` (~39 raw SDK tools, power
+  users), with Claude / Cursor / VS Code config snippets.
+- `mcp>=1.0` added to `[dev]` extras so tests can import it.
+
 ## [0.3.2] — 2026-05-08
 
 ### Added
@@ -157,7 +173,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.2.0...v0.3.0
