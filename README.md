@@ -10,7 +10,7 @@ the terminal.
 
 ## install
 
-    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.9.0
+    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.9.1
     noxuslab init my-noxus-project
     cd my-noxus-project
     noxuslab doctor
@@ -23,10 +23,11 @@ The init wizard prompts for `NOXUS_API_KEY` and writes a chmod-600
 | You want to…                          | Run                                       |
 | ------------------------------------- | ----------------------------------------- |
 | Pull a workflow from the UI to code   | `noxuslab pull <workflow-id>`             |
+| Run it locally + record logs          | `noxuslab run examples/NN_x.py --input k=v` |
+| Inspect a past run (logs)             | `noxuslab trace [list \| show <id>]`      |
+| Review-before-push (dry-run+diff+log) | `noxuslab check examples/NN_x.py`         |
+| See server-vs-local diff              | `noxuslab diff examples/NN_x.py`          |
 | Push a code-defined workflow back     | `noxuslab push examples/NN_x.py`          |
-| See server-vs-local diff before push  | `noxuslab diff <id> examples/NN_x.py`     |
-| Run a workflow with inputs            | `noxuslab run <id-or-file> --input k=v`   |
-| Inspect a past run                    | `noxuslab trace [list \| show <id>]`      |
 | Switch between API-key environments   | `noxuslab env [list \| use <name>]`       |
 | Talk to one of your agents            | `noxuslab chat -a <agent-id>`             |
 | One-shot question (pipe-friendly)     | `noxuslab ask "..." -a <agent-id>`        |
@@ -44,6 +45,26 @@ Full reference: [docs/cli.md](docs/cli.md). Concepts:
 [docs/concepts.md](docs/concepts.md). Renderer:
 [docs/codegen.md](docs/codegen.md). MCP server:
 [docs/mcp.md](docs/mcp.md).
+
+## review loop
+
+When a teammate builds a workflow in the Noxus UI and you want to
+review, test, and push back via PR:
+
+    noxuslab pull <workflow-id>             # 1. fetch as examples/NN_x.py
+    noxuslab run  examples/NN_x.py --input topic=...   # 2. run + log
+    noxuslab trace show <run-id>            # 3. read the logs
+    noxuslab check examples/NN_x.py         # 4. dry-run + diff + last-trace
+    git switch -c review/<short>            # 5. branch + commit
+    git commit -am "review: <workflow-name>"
+    git push -u origin HEAD                 # 6. open the PR
+    # ... after PR review ...
+    noxuslab push examples/NN_x.py          # 7. ship to Noxus
+
+`noxuslab check` is the single "safe-to-commit?" gate: it dry-runs
+the file, diffs it against the server (provenance header carries the
+id, so no UUID needed), and prints the latest local trace status.
+Exit 0 means clean; exit 1 means fix something first.
 
 ## why
 

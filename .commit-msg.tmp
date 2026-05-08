@@ -1,0 +1,7 @@
+feat: add noxuslab check (review gate) and provenance-aware diff
+
+noxuslab check <file> bundles dry-run + diff vs server (auto-extracts
+workflow id from provenance header) + last-trace summary, giving a
+single safe-to-commit/PR gate. noxuslab diff <file> now also accepts
+the file alone when provenance is present. README documents the
+pull -> run -> trace -> check -> commit -> PR -> push loop.
