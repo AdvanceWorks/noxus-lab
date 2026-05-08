@@ -122,7 +122,7 @@ make pull ID=abc-123
 
 # CLI: composable everywhere
 noxuslab pull abc-123 -o - | wc -l
-noxuslab diff abc-123 examples/05_myflow.py && noxuslab push examples/05_myflow.py
+noxuslab diff abc-123 examples/NN_myflow.py && noxuslab push examples/NN_myflow.py
 ```
 
 The CLI is also what a non-developer would `pip install` on a server or

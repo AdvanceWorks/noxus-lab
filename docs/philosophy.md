@@ -15,9 +15,10 @@ worth more than a file that's clever.
 ## 2. Small surface, sharp edges
 
 The package exports two things you actually use: `workflow_to_python`
-and a four-command CLI. Everything else is private (`_term`, `_slug`,
-`_topo_order`). When in doubt, prefix with `_`. When in doubt about
-adding something, don't.
+and a CLI (`pull`, `push`, `diff`, `chat`, `ask`, `list`, `agents`,
+`show`, `init`, `version`). Everything else is private (`_term`,
+`_slug`, `_topo_order`, `_net`, `_secrets`, `_audit`). When in doubt,
+prefix with `_`. When in doubt about adding something, don't.
 
 If a piece of logic appears twice in `examples/`, it might belong in
 `noxuslab/`. If it appears once, it stays inline. If it never appears,

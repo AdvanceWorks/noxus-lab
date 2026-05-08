@@ -7,15 +7,21 @@ Also runnable as `python -m noxuslab`.
 
     noxuslab pull <workflow_id> [-o PATH | -o -] [-f]
     noxuslab push <file>        [--dry-run]
+    noxuslab diff <workflow_id> <file>
     noxuslab list
+    noxuslab agents
     noxuslab show <workflow_id>
-    noxuslab init <dir>
+    noxuslab chat [-a <agent_id>] [-m <model>]
+    noxuslab ask  <question> [-a <agent_id>] [-m <model>]
+    noxuslab init <dir> [--with-makefile]
     noxuslab version
     noxuslab --version | -V
 
-`pull`, `push`, `list`, `show` need `NOXUS_API_KEY` in your environment
-(loaded from `.env` automatically). Optional: `NOXUS_BACKEND_URL` for
-self-hosted instances.
+All commands except `init`/`version` need `NOXUS_API_KEY` in your
+environment (loaded from `.env` automatically). Optional:
+`NOXUS_BACKEND_URL` for self-hosted instances. See
+[security.md](security.md) for `NOXUSLAB_SECRETS_CMD` and
+[for-builders.md](for-builders.md) for production env vars.
 
 ## pull
 
@@ -50,13 +56,44 @@ and skips the save.
     noxuslab list                      # id  name
     noxuslab show <workflow_id>        # full wire JSON
 
+## diff
+
+    noxuslab diff <workflow_id> examples/NN_my_flow.py
+
+Pulls the current server state, generates the canonical Python form,
+and unified-diffs it against your local file. Exits **0** if identical,
+**1** if there are differences (so you can chain it in a script:
+`noxuslab diff <id> <file> && noxuslab push <file>`).
+
+## agents
+
+    noxuslab agents                    # id  name
+
+Lists agents in the workspace. Use the id with `chat -a` or `ask -a`.
+
+## chat, ask
+
+    noxuslab chat                      # default model: gemini-2.5-flash
+    noxuslab chat -a <agent_id>        # tied to an agent (uses its tools/KB)
+    noxuslab chat -m gpt-4o            # pick a different model
+    noxuslab ask "what's in our Q3 KB?" -a <agent_id>
+    echo "summarise the docs" | noxuslab ask -a <agent_id>
+
+`chat` is an interactive REPL with SSE-streamed responses; type
+`/exit` to quit, `/clear` to start a new conversation. `ask` is the
+one-shot, pipe-friendly variant — perfect for shell scripts.
+
 ## init
 
     noxuslab init my-noxus-project
+    noxuslab init my-noxus-project --with-makefile
 
 Scaffolds a fresh project: copies `examples/` and `.env.example` and
-writes a minimal `README.md`. Refuses to scaffold into a non-empty
-directory.
+writes a minimal `README.md`. With `--with-makefile`, also copies the
+top-level `Makefile` and `bin/` so the new project has the same `make
+help` menu as this repo. Refuses to scaffold into a non-empty
+directory. Writes `.noxuslab-template-version` so `make
+template-update` can later show what changed upstream.
 
 ## version
 

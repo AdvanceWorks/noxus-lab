@@ -89,6 +89,9 @@ docs/           you are here
 | `make run ID=<id>` | Execute a workflow |
 | `make pull ID=<id>` | Workflow → Python file |
 | `make push FILE=<f>` | Python file → Workflow |
+| `make diff ID=<id> FILE=<f>` | Show what `push` would change |
 | `make chat AGENT=<id>` | Interactive agent chat |
+| `make ask Q="..." AGENT=<id>` | One-shot question (pipe-friendly) |
+| `make agents` | List agents in the workspace |
 | `make lint` | Check code style |
 | `make ci` | Full local CI (lint + test) |
