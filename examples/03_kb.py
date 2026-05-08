@@ -25,9 +25,9 @@ from noxus_sdk.client import Client
 from noxus_sdk.resources.knowledge_bases import KBConfigV3
 
 SAMPLE = (
-    "GBE-PAS is the CTT health plan benefits office. It handles "
-    "address, contact, IBAN and ADC requests through Go Contact "
-    "tickets. Payments are recorded in the IOS system."
+    "Acme Robotics is a fictional company that builds warehouse "
+    "automation solutions. Its flagship product, the AcmeBot 9000, "
+    "can lift up to 50 kg and runs on rechargeable batteries."
 )
 
 load_dotenv()

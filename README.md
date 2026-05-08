@@ -19,7 +19,7 @@ Two paths, same repo:
 
 | You are a... | Do this |
 |---|---|
-| **Builder** (writes code) | `make setup` → `make hello` → `make pull ID=<id>` → edit → PR → `make push` |
+| **Builder** (writes code) | `make setup` → `make hello` → `make pull ID=<id>` → edit → PR → `make push FILE=examples/NN_<slug>.py` |
 | **User** (talks to AI) | `make setup` → `make chat AGENT=<id>` — ask questions, get answers |
 
 See [docs/quickstart.md](docs/quickstart.md) for a zero-assumption setup guide (no coding background needed).

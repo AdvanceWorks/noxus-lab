@@ -5,12 +5,12 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-05-08
+
 ### Added
 - `docs/quickstart.md` — zero-assumption setup guide for non-technical
   users (Windows + Mac). Covers tool install, template setup, API key,
   and when to use `make` vs the `noxuslab` CLI directly.
-
-## [0.3.1] — 2026-05-08
 
 ### Changed
 - README: dropped broken PyPI badge; install instructions now use

@@ -23,5 +23,5 @@ within two weeks for anything credible.
 - Pre-commit runs `gitleaks` and `detect-private-key` to keep secrets out
   of commits. Treat any leaked key as compromised; rotate immediately on
   the Noxus dashboard.
-- `noxuslab push` executes the imported file with `exec`. Only push
-  files you wrote or reviewed.
+- `noxuslab push` imports the file with `runpy.run_path` in a fresh
+  namespace. Only push code you wrote or reviewed.
