@@ -5,10 +5,6 @@ class NoxusLabError(Exception):
     """Anything noxuslab raises on purpose."""
 
 
-class NotFound(NoxusLabError):
-    """A resource referenced by id does not exist (locally or remotely)."""
-
-
 class BadFile(NoxusLabError):
     """A file is missing, malformed, or refuses an unsafe overwrite."""
 

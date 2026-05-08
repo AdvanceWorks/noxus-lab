@@ -52,3 +52,21 @@ def test_emit_appends_jsonl_to_file(monkeypatch, tmp_path: Path):
     rec1 = json.loads(lines[1])
     assert rec1["cmd"] == "push"
     assert rec1["rc"] == 1
+
+
+def test_emit_to_stderr(monkeypatch, capsys):
+    monkeypatch.delenv("NOXUSLAB_AUDIT_LOG", raising=False)
+    monkeypatch.setenv("NOXUSLAB_AUDIT", "stderr")
+    emit(["list"], 0, 5)
+    err = capsys.readouterr().err
+    assert '"cmd":"list"' in err
+    assert '"rc":0' in err
+
+
+def test_time_ms_is_monotonic_positive():
+    from noxuslab._audit import time_ms
+
+    a = time_ms()
+    b = time_ms()
+    assert a > 0
+    assert b >= a

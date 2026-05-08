@@ -178,8 +178,6 @@ def cmd_diff(args: argparse.Namespace) -> int:
     canonical Python form, and unified-diffs it against `<file>`.
     Exits 0 if no differences, 1 if differences exist.
     """
-    import difflib as _difflib
-
     path = Path(args.file)
     if not path.is_file():
         raise BadFile(f"not found: {path}")
@@ -193,7 +191,7 @@ def cmd_diff(args: argparse.Namespace) -> int:
     server_code = workflow_to_python(wf, source_id=args.workflow_id)
     local_code = path.read_text(encoding="utf-8")
     diff = list(
-        _difflib.unified_diff(
+        difflib.unified_diff(
             server_code.splitlines(keepends=True),
             local_code.splitlines(keepends=True),
             fromfile=f"server:{args.workflow_id}",
@@ -279,6 +277,7 @@ def main(argv: list[str] | None = None) -> int:
                 dim(f"(did you mean '{guess[0]}'?)"),
                 file=sys.stderr,
             )
+            sys.exit(2)
 
     args = p.parse_args(argv)
     from noxuslab._audit import emit, time_ms

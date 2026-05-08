@@ -46,7 +46,7 @@ def _argv_summary(argv: list[str]) -> dict:
 def _sink():
     path = os.environ.get("NOXUSLAB_AUDIT_LOG")
     if path:
-        return Path(path).open("a", encoding="utf-8", buffering=1)  # noqa: SIM115 — caller closes
+        return Path(path).open("a", encoding="utf-8", errors="replace", buffering=1)  # noqa: SIM115 — caller closes
     if os.environ.get("NOXUSLAB_AUDIT") == "stderr":
         return sys.stderr
     return None

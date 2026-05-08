@@ -34,7 +34,3 @@ def red(s: str) -> str:
 
 def green(s: str) -> str:
     return _wrap("32", s)
-
-
-def yellow(s: str) -> str:
-    return _wrap("33", s)

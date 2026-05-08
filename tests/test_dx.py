@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from noxuslab._term import _enabled, bold, dim, green, red, yellow
+from noxuslab._term import _enabled, bold, dim, green, red
 from noxuslab.cli import main
 
 
@@ -19,7 +19,7 @@ def test_term_wraps_when_enabled(monkeypatch):
     monkeypatch.delenv("NO_COLOR", raising=False)
     monkeypatch.setattr("sys.stdout.isatty", lambda: True)
     monkeypatch.setattr("sys.stderr.isatty", lambda: True)
-    for fn in (bold, dim, red, green, yellow):
+    for fn in (bold, dim, red, green):
         out = fn("hi")
         assert out.endswith("\x1b[0m")
         assert "hi" in out
@@ -45,3 +45,18 @@ def test_did_you_mean_hint(capsys):
         main(monkeypatch_argv)
     err = capsys.readouterr().err
     assert "pul" in err or "did you mean" in err
+
+
+def test_version_consistent_across_sources():
+    """`pyproject.toml`::project.version must equal `noxuslab.__version__`."""
+    import sys
+
+    if sys.version_info >= (3, 11):
+        import tomllib  # type: ignore[import-not-found]
+    else:
+        import tomli as tomllib  # type: ignore[import-not-found,no-redef]
+
+    import noxuslab
+
+    toml = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    assert noxuslab.__version__ == toml["project"]["version"]

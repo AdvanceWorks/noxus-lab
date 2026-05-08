@@ -65,3 +65,63 @@ def test_python_dash_m_works():
         check=True,
     )
     assert r.stdout.strip()
+
+
+def test_push_dry_run_validates_without_save(tmp_path: Path, monkeypatch, capsys):
+    """`push --dry-run` runs the file but never builds a client."""
+    monkeypatch.chdir(tmp_path)
+    f = tmp_path / "flow.py"
+    f.write_text(
+        "class W:\n    nodes = [1, 2, 3]\n    edges = [(1, 2), (2, 3)]\nwf = W()\n",
+        encoding="utf-8",
+    )
+    # Sentinel: if _client is called, raise loudly.
+    from noxuslab import cli
+
+    monkeypatch.setattr(cli, "_client", lambda: pytest.fail("must not call _client"))
+    rc = main(["push", str(f), "--dry-run"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "3 nodes" in out and "2 edges" in out
+
+
+def test_push_rejects_file_without_wf(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    f = tmp_path / "no_wf.py"
+    f.write_text("x = 1\n", encoding="utf-8")
+    rc = main(["push", str(f), "--dry-run"])
+    assert rc == 1
+
+
+def test_push_rejects_missing_file(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    rc = main(["push", str(tmp_path / "ghost.py"), "--dry-run"])
+    assert rc == 1
+
+
+def test_diff_rejects_missing_file(tmp_path: Path):
+    rc = main(["diff", "11111111-2222-3333-4444-555555555555", str(tmp_path / "ghost.py")])
+    assert rc == 1
+
+
+def test_diff_rejects_bad_id(tmp_path: Path, capsys):
+    f = tmp_path / "x.py"
+    f.write_text("# any\n", encoding="utf-8")
+    rc = main(["diff", "garbage", str(f)])
+    assert rc == 1
+    assert "not a uuid" in capsys.readouterr().err
+
+
+def test_show_rejects_bad_id(capsys):
+    rc = main(["show", "garbage"])
+    assert rc == 1
+    assert "not a uuid" in capsys.readouterr().err
+
+
+def test_init_with_makefile_copies_makefile(tmp_path: Path):
+    target = tmp_path / "scaffold"
+    rc = main(["init", str(target), "--with-makefile"])
+    assert rc == 0
+    assert (target / "Makefile").is_file()
+    assert (target / "bin").is_dir()
+    assert (target / ".noxuslab-template-version").is_file()
