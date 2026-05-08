@@ -53,12 +53,17 @@ def _topo_order(node_ids: list[str], edges: list[dict]) -> list[str]:
     return out
 
 
-def _config_kwargs(cfg: dict, hoisted: dict[str, str]) -> str:
+def _config_kwargs(
+    cfg: dict,
+    hoisted: dict[str, str],
+    dropped: list[str] | None = None,
+) -> str:
     parts: list[str] = []
     for key in sorted(cfg):
         if not key.isidentifier() or keyword.iskeyword(key):
-            # Skip keys we can't render as Python kwargs; they round-trip
-            # via the wire dict but never appear in real workflows.
+            # Cannot render as Python kwarg. Record so callers can warn.
+            if dropped is not None:
+                dropped.append(key)
             continue
         rendered = _py(cfg[key])
         if len(rendered) > CONFIG_INLINE_LIMIT:
@@ -119,10 +124,14 @@ def workflow_to_python(
 
     hoisted: dict[str, str] = {}
     body: list[str] = []
+    dropped: dict[str, list[str]] = {}
 
     for nid in order:
         n = by_id[nid]
-        kwargs = _config_kwargs(n.get("node_config", {}), hoisted)
+        node_dropped: list[str] = []
+        kwargs = _config_kwargs(n.get("node_config", {}), hoisted, node_dropped)
+        if node_dropped:
+            dropped[name_of[nid]] = node_dropped
         if kwargs:
             body.append(f'{name_of[nid]} = {var}.node("{n["type"]}").config({kwargs})')
         else:
@@ -177,6 +186,14 @@ def workflow_to_python(
 
     pieces.append(f"{var} = WorkflowDefinition(name={_py(name)})\n")
     pieces.append("\n".join(body))
+
+    if dropped:
+        notes = []
+        for var_name, keys in sorted(dropped.items()):
+            notes.append(
+                f"# noxuslab: dropped non-renderable config key(s) on {var_name}: {', '.join(repr(k) for k in keys)}"
+            )
+        pieces.append("\n".join(notes) + "\n")
 
     if runnable:
         pieces.append(f"\nprint(c.workflows.save({var}).id)\n")

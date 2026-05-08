@@ -40,6 +40,12 @@ edit the file and use `make push FILE=...` to send updates.
 
 ## Limits and edge cases
 
+- **Non-renderable config keys.** If a config dict has a key that is
+  not a valid Python identifier or is a reserved keyword (`if`, `for`,
+  `class`...), the generator skips it and emits a comment:
+  `# noxuslab: dropped non-renderable config key(s) on n0: 'if'`.
+  These keys still round-trip via the wire dict on the server but
+  cannot be expressed as Python kwargs.
 - **Subflows / agent flows.** `subflow_id` is preserved in the wire
   dict but the SDK does not expose a clean builder API for it yet.
   Workflows that nest agent flows will round-trip but may lose
@@ -56,6 +62,9 @@ edit the file and use `make push FILE=...` to send updates.
   emitted. The new workflow will be auto-laid out by the UI.
 - **Run history / triggers.** Pull is workflow-only. Triggers, runs,
   and KB attachments are not exported.
+- **Cycles in the graph.** Topological sort falls back to original
+  insertion order when a cycle is detected; the generated file is
+  still valid but may not read top-to-bottom.
 
 ## Public API
 

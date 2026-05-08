@@ -36,6 +36,20 @@ is no.
 
 ---
 
+## Corollaries
+
+- **No Docker.** This is a Python CLI. `pip install noxuslab` and
+  `make setup` work on Linux, macOS, and Windows (Git Bash). A
+  Dockerfile would add a 200 MB layer for a tool that fits in
+  500 lines. Ken Thompson didn't ship `cat` in a container.
+- **No build step.** Hatchling is the build backend; the source is
+  the artifact. No transpiler, no bundler, no codegen pre-pass.
+- **No optional features behind feature flags.** If it's worth
+  shipping, it's worth shipping unconditionally. If it isn't, delete
+  it.
+
+---
+
 These rules came from people who built UNIX, C, Plan 9, and Go. They
 work because they're true, not because of who said them. If you find a
 better rule, propose it — but bring receipts.

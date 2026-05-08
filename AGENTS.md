@@ -31,6 +31,13 @@ If a piece of logic appears twice in `examples/`, it is a candidate for
   enforces both on three OSes and three Python versions.
 - **Don't add a dependency without need.** Justify in the PR. Pin
   exactly one version of `noxus-sdk`.
+- **Update CHANGELOG on every change.** Every commit that ships
+  user-visible behaviour appends a bullet under `## [Unreleased]` in
+  `CHANGELOG.md`. Sections: `### Added`, `### Changed`, `### Fixed`,
+  `### Removed`. AI assistants must do this automatically — no
+  exceptions for "small" changes.
+- **No Docker.** This is a Python CLI; `pip install` and `make setup`
+  cover all targets. Adding a Dockerfile is a regression in DX.
 
 ## Style
 

@@ -142,9 +142,13 @@ def cmd_init(args: argparse.Namespace) -> int:
                 shutil.copy2(src, target / name)
             elif src.is_dir():
                 shutil.copytree(src, target / name, dirs_exist_ok=True)
+    # Pin the template version so `make template-update` can diff against it.
+    (target / ".noxuslab-template-version").write_text(__version__ + "\n", encoding="utf-8")
     (target / "README.md").write_text(
-        f"# {target.name}\n\nScaffolded by `noxuslab init`. "
-        "Copy .env.example to .env, set NOXUS_API_KEY, then run examples.\n",
+        f"# {target.name}\n\nScaffolded by `noxuslab init` "
+        f"(template version `{__version__}`). "
+        "Copy `.env.example` to `.env`, set `NOXUS_API_KEY`, then run "
+        "`make setup` and `make help`.\n",
         encoding="utf-8",
     )
     print(target)

@@ -13,7 +13,7 @@ endif
 
 TOPIC ?= octopus cognition
 
-.PHONY: help setup hello run kb chat ask list agents pull push lint fmt test typecheck ci clean new
+.PHONY: help setup hello run kb chat ask list agents pull push lint fmt test typecheck ci clean new template-update
 
 help:
 	@echo 'use:'
@@ -40,6 +40,7 @@ help:
 	@echo '  ci               same as CI: lint + test (run before pushing)'
 	@echo '  clean            remove venv and caches'
 	@echo '  new NAME=<dir>   scaffold a new project from this template'
+	@echo '  template-update  pull updates from the upstream template'
 
 setup:
 	sh bin/setup
@@ -95,3 +96,17 @@ clean:
 new:
 	@test -n "$(NAME)" || (echo 'usage: make new NAME=my-project' >&2; exit 2)
 	$(NOXUSLAB) init --with-makefile $(NAME)
+
+template-update:
+	@if [ ! -f .noxuslab-template-version ]; then \
+		echo 'no .noxuslab-template-version found; this is the upstream template itself.' >&2; exit 2; \
+	fi
+	@cur=$$(cat .noxuslab-template-version); \
+	echo "current template version: $$cur"; \
+	echo ""; \
+	echo "to pull updates from upstream, run:"; \
+	echo "  git remote add template https://github.com/AdvanceWorks/noxus-lab.git 2>/dev/null || true"; \
+	echo "  git fetch template main"; \
+	echo "  git merge template/main --allow-unrelated-histories"; \
+	echo ""; \
+	echo "for the CLI alone:  pip install -U noxuslab"

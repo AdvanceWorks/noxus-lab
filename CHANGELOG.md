@@ -5,6 +5,35 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `noxuslab chat [--agent <id>] [--model <name>]` — interactive
+  conversation REPL with SSE-streamed responses. `/exit`, `/clear`
+  built-ins.
+- `noxuslab ask <question> [--agent <id>]` — one-shot, pipe-friendly.
+- `noxuslab agents` — list agents in the workspace.
+- `noxuslab init --with-makefile` — full project scaffold including
+  Makefile, `bin/`, and a `.noxuslab-template-version` marker.
+- `make chat`, `make ask`, `make list`, `make agents`, `make new`,
+  `make template-update` targets. `make help` is now grouped by
+  audience (use / browse / sync / dev).
+- `examples/08_chat.py` — programmatic conversation creation.
+- `docs/for-users.md` and `docs/for-builders.md` — dual-audience guides.
+- `.github/workflows/dependabot-automerge.yml` — auto-approve + squash
+  grouped dependabot PRs after CI passes.
+- `tests/test_chat.py` — 6 tests covering chat REPL behaviour (mocked).
+
+### Changed
+- README: dual-audience quickstart table + chat/ask in the run section.
+- AGENTS.md: hard rule that every behaviour change updates CHANGELOG;
+  Docker explicitly out of scope.
+- Codegen now emits a `# noxuslab: dropped <N> non-renderable config
+  key(s): ...` comment instead of silently skipping invalid kwargs.
+
+### Fixed
+- Codegen: Python keywords (`if`, `for`, etc.) used as config keys are
+  no longer rendered as invalid kwargs (`SyntaxError`). They are
+  reported in the dropped-keys comment.
+
 ## [0.2.0] — 2026-05-07
 
 ### Added
