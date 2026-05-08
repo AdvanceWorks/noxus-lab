@@ -11,6 +11,7 @@ so the file is traceable back to its origin.
 """
 
 import json
+import keyword
 import re
 from datetime import datetime, timezone
 from typing import Any
@@ -55,7 +56,7 @@ def _topo_order(node_ids: list[str], edges: list[dict]) -> list[str]:
 def _config_kwargs(cfg: dict, hoisted: dict[str, str]) -> str:
     parts: list[str] = []
     for key in sorted(cfg):
-        if not key.isidentifier():
+        if not key.isidentifier() or keyword.iskeyword(key):
             # Skip keys we can't render as Python kwargs; they round-trip
             # via the wire dict but never appear in real workflows.
             continue

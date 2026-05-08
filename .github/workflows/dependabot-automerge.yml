@@ -1,0 +1,27 @@
+name: dependabot-automerge
+
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: wait for CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr checks "${{ github.event.pull_request.html_url }}" --watch
+
+      - name: approve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
+
+      - name: squash-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge --squash --delete-branch "${{ github.event.pull_request.html_url }}"

@@ -3,7 +3,10 @@
     noxuslab pull <workflow_id> [--out PATH | -o -] [--force]
     noxuslab push <path/to/file.py> [--dry-run]
     noxuslab list
+    noxuslab agents
     noxuslab show <workflow_id>
+    noxuslab chat [--agent <id>] [--model <name>]
+    noxuslab ask <question> [--agent <id>] [--model <name>]
     noxuslab version
     noxuslab --version | -V
 
@@ -132,6 +135,13 @@ def cmd_init(args: argparse.Namespace) -> int:
     env_tpl = here / ".env.example"
     if env_tpl.is_file():
         shutil.copy2(env_tpl, target / ".env.example")
+    if args.with_makefile:
+        for name in ("Makefile", "bin"):
+            src = here / name
+            if src.is_file():
+                shutil.copy2(src, target / name)
+            elif src.is_dir():
+                shutil.copytree(src, target / name, dirs_exist_ok=True)
     (target / "README.md").write_text(
         f"# {target.name}\n\nScaffolded by `noxuslab init`. "
         "Copy .env.example to .env, set NOXUS_API_KEY, then run examples.\n",
@@ -139,6 +149,28 @@ def cmd_init(args: argparse.Namespace) -> int:
     )
     print(target)
     return 0
+
+
+def cmd_agents(_args: argparse.Namespace) -> int:
+    load_dotenv()
+    for a in _client().agents.list():
+        print(f"{a.id}  {a.name}")
+    return 0
+
+
+def cmd_chat(args: argparse.Namespace) -> int:
+    from noxuslab.chat import start_chat
+
+    return start_chat(agent_id=args.agent, model=args.model)
+
+
+def cmd_ask(args: argparse.Namespace) -> int:
+    from noxuslab.chat import one_shot
+
+    question = " ".join(args.question) if args.question else sys.stdin.read().strip()
+    if not question:
+        raise NoxusLabError("no question provided")
+    return one_shot(question, agent_id=args.agent, model=args.model)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -167,7 +199,21 @@ def main(argv: list[str] | None = None) -> int:
 
     pi = sub.add_parser("init", help="scaffold a new project from this template")
     pi.add_argument("dir", help="target directory (must be empty or new)")
+    pi.add_argument("--with-makefile", action="store_true", help="also copy Makefile + bin/")
     pi.set_defaults(func=cmd_init)
+
+    sub.add_parser("agents", help="list agents in the workspace").set_defaults(func=cmd_agents)
+
+    pc = sub.add_parser("chat", help="interactive conversation with a Noxus agent")
+    pc.add_argument("-a", "--agent", help="agent id to attach to")
+    pc.add_argument("-m", "--model", help="model name (default: gemini-2.5-flash)")
+    pc.set_defaults(func=cmd_chat)
+
+    pa = sub.add_parser("ask", help="one-shot question (pipe-friendly)")
+    pa.add_argument("question", nargs="*", help="question text (or pipe via stdin)")
+    pa.add_argument("-a", "--agent", help="agent id to attach to")
+    pa.add_argument("-m", "--model", help="model name (default: gemini-2.5-flash)")
+    pa.set_defaults(func=cmd_ask)
 
     known = {a.dest for a in sub._choices_actions}  # type: ignore[attr-defined]
     if argv and argv[0] not in known and not argv[0].startswith("-"):

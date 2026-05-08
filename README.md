@@ -6,12 +6,25 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 **Workflow-as-code for [Noxus AI](https://noxus.ai).** Build in the UI,
-edit in your IDE, review in pull requests. Two artifacts, one idea:
+edit in your IDE, review in pull requests. Chat with your AI agents from
+the terminal. Two artifacts, one idea:
 
 - **This template repo** — clone-and-go starter with examples, docs,
   pre-commit, CI. *Use this template* on the GitHub page.
 - **The `noxuslab` CLI** (PyPI) — `pip install noxuslab` for users who
-  already have a repo. Powers the UI ↔ code round-trip.
+  already have a repo. Powers the UI ↔ code round-trip + agent chat.
+
+## quick start
+
+Two paths, same repo:
+
+| You are a... | Do this |
+|---|---|
+| **Builder** (writes code) | `make setup` → `make hello` → `make pull ID=<id>` → edit → PR → `make push` |
+| **User** (talks to AI) | `make setup` → `make chat AGENT=<id>` — ask questions, get answers |
+
+See [docs/for-builders.md](docs/for-builders.md) or
+[docs/for-users.md](docs/for-users.md) for the full guide.
 
 ## why
 
@@ -50,9 +63,13 @@ GnuWin32 `make`.
     make hello                    # build a workflow, prints id
     make run ID=<id> TOPIC=...    # run it
     make kb [DOC=path/to.txt]     # ingest a doc, search it
+    make chat [AGENT=<id>]        # interactive agent conversation
+    make ask Q="..." [AGENT=<id>] # one-shot question (pipe-friendly)
+    make list                     # show workflows
+    make agents                   # show agents
     make pull ID=<id> [OUT=...]   # workflow id -> examples/NN_<slug>.py
     make push FILE=examples/...   # send a code-defined workflow back
-    make help                     # list targets
+    make help                     # list all targets
 
 ## dev
 
@@ -74,6 +91,7 @@ CI mirrors all of this — see [.github/workflows/ci.yml](.github/workflows/ci.y
     05_async.py        parallel KB ops via asyncio
     06_introspect.py   list available node types and models
     07_pull_demo.py    print generated python for a workflow id
+    08_chat.py         start a conversation with an agent
 
 ## mcp
 
@@ -83,6 +101,8 @@ VS Code config in [.vscode/mcp.json](.vscode/mcp.json). See
 
 ## docs
 
+- [docs/for-users.md](docs/for-users.md) — non-technical guide (chat with agents)
+- [docs/for-builders.md](docs/for-builders.md) — developer workflow guide
 - [docs/philosophy.md](docs/philosophy.md) — three rules
 - [docs/concepts.md](docs/concepts.md) — primitives in 3 minutes
 - [docs/cli.md](docs/cli.md) — full CLI reference
