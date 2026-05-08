@@ -34,6 +34,9 @@ and [Semantic Versioning](https://semver.org/).
 - `tests/test_chat.py` — 6 tests covering chat REPL behaviour (mocked).
 
 ### Changed
+- CI matrix expanded from 2 jobs (Ubuntu × Py 3.10/3.12) to 6
+  (Ubuntu + macOS + Windows × Py 3.10/3.12). All jobs install from
+  `requirements-dev.lock` for reproducibility.
 - README: dual-audience quickstart table + chat/ask in the run section.
 - AGENTS.md: hard rule that every behaviour change updates CHANGELOG;
   Docker explicitly out of scope.

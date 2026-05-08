@@ -7,10 +7,11 @@ permissions:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v6
@@ -18,6 +19,28 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - run: sh bin/setup
-      - run: sh bin/lint
-      - run: sh bin/test
+      - name: setup (locked, posix)
+        if: runner.os != 'Windows'
+        env:
+          LOCKED: "1"
+        run: sh bin/setup
+      - name: setup (locked, windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          LOCKED: "1"
+        run: sh bin/setup
+      - name: lint
+        if: runner.os != 'Windows'
+        run: sh bin/lint
+      - name: lint (windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: sh bin/lint
+      - name: test
+        if: runner.os != 'Windows'
+        run: sh bin/test
+      - name: test (windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: sh bin/test
