@@ -5,6 +5,46 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-05-08
+
+### Added
+- `SECURITY.md` and `.github/CONTRIBUTING.md` so GitHub auto-surfaces
+  the security policy and contributing guide.
+- Python 3.11 in the CI matrix (now ubuntu/macos/windows × 3.10/3.11/3.12 = 9 jobs).
+- Optional production env vars documented in `.env.example`:
+  `NOXUSLAB_SECRETS_CMD`, `NOXUSLAB_AUDIT_LOG`, `NOXUSLAB_AUDIT`,
+  `NOXUSLAB_MAX_RETRIES`, `NOXUSLAB_BASE_DELAY`, `NOXUSLAB_MAX_DELAY`.
+- Tests for `cmd_diff`, `cmd_show`, `cmd_push --dry-run`,
+  `cmd_init --with-makefile`, audit-to-stderr, `time_ms`, and
+  version consistency between `pyproject.toml` and `__init__.py`.
+  Coverage 73% → **81%**.
+- `docs/cli.md` complete reference for `chat`, `ask`, `agents`,
+  `diff`, and the `init --with-makefile` flag.
+
+### Changed
+- `.env.example` now seeds `NOXUS_API_KEY=your_key_here` (was empty)
+  to match the quickstart guide.
+- `examples/03_kb.py` sample text replaced with a generic fictional
+  company (was internal CTT operational content).
+- `docs/security.md`: corrected statement about `noxuslab push` —
+  uses `runpy.run_path`, not `exec`.
+- `docs/philosophy.md` and `noxuslab/__init__.py` docstring updated
+  to list all current CLI commands (was stale "four-command CLI").
+- README builder quickstart row now shows `make push FILE=...`.
+- `_audit.py` log file open uses `errors="replace"` so encoding edge
+  cases degrade gracefully instead of raising.
+
+### Removed
+- `NoxusLabError.NotFound` — was defined but never raised anywhere.
+- `noxuslab._term.yellow` — was defined but never used outside its
+  own test.
+
+### Fixed
+- Unknown subcommand no longer prints two error messages — the
+  "did you mean" hint exits with code 2 directly, suppressing
+  argparse's generic "invalid choice" follow-up.
+- Removed duplicate `import difflib` in `cmd_diff`.
+
 ## [0.3.1] — 2026-05-08
 
 ### Added
@@ -117,7 +157,8 @@ and [Semantic Versioning](https://semver.org/).
 - Examples 01–07 covering build, run, KB, agent, async, introspect, pull demo.
 - CI, pre-commit, ruff strict, pyright config.
 
-[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AdvanceWorks/noxus-lab/compare/v0.1.0...v0.2.0
