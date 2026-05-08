@@ -281,11 +281,19 @@ def main(argv: list[str] | None = None) -> int:
             )
 
     args = p.parse_args(argv)
+    from noxuslab._audit import emit, time_ms
+
+    started = time_ms()
+    rc = 1
     try:
-        return args.func(args)
+        rc = args.func(args)
+        return rc  # noqa: RET504 — rc captured for the finally audit emit
     except NoxusLabError as e:
         print(f"error: {e}", file=sys.stderr)
-        return 1
+        rc = 1
+        return rc  # noqa: RET504 — rc captured for the finally audit emit
+    finally:
+        emit(argv or sys.argv[1:], rc, time_ms() - started)
 
 
 if __name__ == "__main__":

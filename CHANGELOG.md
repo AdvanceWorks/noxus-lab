@@ -6,6 +6,11 @@ and [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Structured audit log — set `NOXUSLAB_AUDIT_LOG=/path/to/audit.log`
+  (or `NOXUSLAB_AUDIT=stderr`) and every CLI invocation emits a JSON
+  line with ts, user, host, cmd, rc, duration_ms. Free-form arguments
+  to `chat` and `ask` are redacted (count only, never content). Ready
+  for SIEM ingestion (Splunk / Datadog / ELK).
 - `NOXUSLAB_SECRETS_CMD` — pluggable secret resolver. Set it to a
   shell command (e.g. `aws secretsmanager get-secret-value --query
   SecretString --output text --secret-id ...`) and `noxuslab` will
