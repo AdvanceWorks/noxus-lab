@@ -7,13 +7,16 @@ Also runnable as `python -m noxuslab`.
 
     noxuslab pull <workflow_id> [-o PATH | -o -] [-f]
     noxuslab push <file>        [--dry-run]
-    noxuslab diff <workflow_id> <file>
+    noxuslab diff <workflow_id> <file> [--visual]
+    noxuslab watch <file>       [--interval SECS]
+    noxuslab gen "<prompt>"     [-a <agent>] [-m <model>] [-o PATH]
     noxuslab list
     noxuslab agents
     noxuslab show <workflow_id>
     noxuslab chat [-a <agent_id>] [-m <model>]
     noxuslab ask  <question> [-a <agent_id>] [-m <model>]
-    noxuslab init <dir> [--with-makefile]
+    noxuslab init <dir> [--with-makefile] [--interactive | --no-interactive]
+    noxuslab mcp serve [--transport stdio|sse]
     noxuslab version
     noxuslab --version | -V
 
@@ -101,3 +104,43 @@ template-update` can later show what changed upstream.
     noxuslab -V
 
 Prints the installed `noxuslab` version. Handy in bug reports.
+
+## watch
+
+    noxuslab watch examples/05_my_flow.py
+    noxuslab watch examples/05_my_flow.py --interval 0.2
+
+Polls the file's mtime; on every save, executes the file and pushes the
+resulting `wf` to Noxus. First push fires immediately. Each push prints
+a timestamp + new workflow id + elapsed ms. Hot-reload for workflows.
+Ctrl+C to stop.
+
+## gen
+
+    noxuslab gen "summarise PDFs and email them weekly"
+    noxuslab gen "build an FAQ bot" --agent <workflow-aware-agent-id>
+    noxuslab gen "..." --out examples/99_my_idea.py
+
+Asks a Noxus agent for Python code that defines a `WorkflowDefinition`
+named `wf`. Strips markdown fences. Writes to `examples/NN_<slug>.py`
+(or `--out`). Review the file before `noxuslab push`. Free-form prompts
+are never written to the audit log.
+
+## diff --visual
+
+    noxuslab diff <workflow_id> <file> --visual
+
+Emits two Mermaid `flowchart TD` blocks (server vs local). Paste into
+GitHub, mermaid.live, or VS Code's Mermaid preview to see the graphs
+side by side. Without `--visual`, prints a unified Python diff.
+
+## init wizard
+
+    noxuslab init my-project              # interactive when stdin is a TTY
+    noxuslab init my-project --no-interactive
+    noxuslab init my-project --interactive
+
+The interactive wizard prompts for `NOXUS_API_KEY` (hidden via
+`getpass`) and an optional backend URL, then writes a chmod-600 `.env`
+inside the new project. Skip with Ctrl+C — the scaffold is already on
+disk.

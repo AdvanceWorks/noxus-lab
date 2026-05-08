@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 
 from noxuslab import __version__
 from noxuslab._net import call as net_call
-from noxuslab._term import dim, red
+from noxuslab._term import dim, green, red
 from noxuslab.codegen import _slug, workflow_to_python
 from noxuslab.errors import BadFile, NoxusLabError
 
@@ -131,7 +131,11 @@ def cmd_version(_args: argparse.Namespace) -> int:
 
 
 def cmd_init(args: argparse.Namespace) -> int:
-    """Scaffold a new project under <dir> by copying examples + .env.example."""
+    """Scaffold a new project under <dir> by copying examples + .env.example.
+
+    With `--interactive` (or when stdin is a TTY), runs a short wizard that
+    asks for the API key and writes a ready-to-use `.env`.
+    """
     target = Path(args.dir)
     if target.exists() and any(target.iterdir()):
         raise BadFile(f"refusing to scaffold into non-empty {target}")
@@ -159,8 +163,51 @@ def cmd_init(args: argparse.Namespace) -> int:
         "`make setup` and `make help`.\n",
         encoding="utf-8",
     )
+
+    interactive = args.interactive or (
+        args.interactive is None and sys.stdin.isatty() and sys.stdout.isatty()
+    )
+    if interactive:
+        _run_init_wizard(target)
+
     print(target)
     return 0
+
+
+def _run_init_wizard(target: Path) -> None:
+    """First-run wizard: prompt for API key + backend URL, write `.env`.
+
+    Stdlib only. Skips silently on EOF / KeyboardInterrupt — scaffold is
+    already on disk; the user can re-run setup later.
+    """
+    import getpass
+
+    print()
+    print(dim(f"setting up {target.name}..."))
+    print(dim("press Enter to skip a question; Ctrl+C to abort the wizard"))
+    try:
+        key = getpass.getpass("noxus api key (hidden): ").strip()
+        url = input("backend url [https://backend.noxus.ai]: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        print(dim("wizard skipped — edit .env manually before `make setup`"))
+        return
+
+    lines = []
+    if key:
+        lines.append(f"NOXUS_API_KEY={key}")
+    if url:
+        lines.append(f"NOXUS_BACKEND_URL={url}")
+    if lines:
+        env = target / ".env"
+        env.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        import contextlib
+
+        with contextlib.suppress(OSError):
+            env.chmod(0o600)  # Windows / FS without chmod silently ignored
+        print(green(f"wrote {env} (chmod 600)"))
+    else:
+        print(dim("no values entered — .env not created"))
 
 
 def cmd_agents(_args: argparse.Namespace) -> int:
@@ -177,6 +224,9 @@ def cmd_diff(args: argparse.Namespace) -> int:
     Pulls the current server state for the workflow, generates the
     canonical Python form, and unified-diffs it against `<file>`.
     Exits 0 if no differences, 1 if differences exist.
+
+    With `--visual`, emits two side-by-side Mermaid graphs (server vs
+    local) instead of a unified text diff.
     """
     path = Path(args.file)
     if not path.is_file():
@@ -188,6 +238,20 @@ def cmd_diff(args: argparse.Namespace) -> int:
         lambda: client.workflows.get(workflow_id=args.workflow_id),
         what="diff workflow",
     )
+    if args.visual:
+        from noxuslab.graph import to_mermaid
+
+        local_ns = runpy.run_path(str(path), run_name="_noxuslab_visual")
+        local_wf = local_ns.get("wf")
+        print("## server")
+        print(to_mermaid(wf, title=f"server:{args.workflow_id}"))
+        print("## local")
+        print(
+            to_mermaid(local_wf, title=f"local:{path}")
+            if local_wf is not None
+            else "(no `wf` defined in local file)"
+        )
+        return 0
     server_code = workflow_to_python(wf, source_id=args.workflow_id)
     local_code = path.read_text(encoding="utf-8")
     diff = list(
@@ -231,6 +295,19 @@ def cmd_mcp_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_watch(args: argparse.Namespace) -> int:
+    from noxuslab.watch import watch
+
+    return watch(args.file, interval=args.interval)
+
+
+def cmd_gen(args: argparse.Namespace) -> int:
+    from noxuslab.gen import generate
+
+    prompt = " ".join(args.prompt) if args.prompt else sys.stdin.read().strip()
+    return generate(prompt, agent_id=args.agent, model=args.model, out=args.out)
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="noxuslab", description=__doc__)
     p.add_argument("-V", "--version", action="version", version=f"noxuslab {__version__}")
@@ -258,6 +335,12 @@ def main(argv: list[str] | None = None) -> int:
     pi = sub.add_parser("init", help="scaffold a new project from this template")
     pi.add_argument("dir", help="target directory (must be empty or new)")
     pi.add_argument("--with-makefile", action="store_true", help="also copy Makefile + bin/")
+    pi.add_argument(
+        "--interactive",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="force/disable wizard; default = on when stdin is a TTY",
+    )
     pi.set_defaults(func=cmd_init)
 
     sub.add_parser("agents", help="list agents in the workspace").set_defaults(func=cmd_agents)
@@ -265,6 +348,11 @@ def main(argv: list[str] | None = None) -> int:
     pd = sub.add_parser("diff", help="show what `push <file>` would change")
     pd.add_argument("workflow_id")
     pd.add_argument("file")
+    pd.add_argument(
+        "--visual",
+        action="store_true",
+        help="emit Mermaid graphs (server + local) instead of a text diff",
+    )
     pd.set_defaults(func=cmd_diff)
 
     pc = sub.add_parser("chat", help="interactive conversation with a Noxus agent")
@@ -290,6 +378,23 @@ def main(argv: list[str] | None = None) -> int:
         help="transport (default: stdio)",
     )
     pm_serve.set_defaults(func=cmd_mcp_serve)
+
+    pw = sub.add_parser("watch", help="hot-push a workflow file on every save")
+    pw.add_argument("file", help="path to a workflow .py file")
+    pw.add_argument(
+        "--interval",
+        type=float,
+        default=0.5,
+        help="poll interval in seconds (default 0.5)",
+    )
+    pw.set_defaults(func=cmd_watch)
+
+    pg = sub.add_parser("gen", help="generate a workflow Python file from a prompt")
+    pg.add_argument("prompt", nargs="*", help="natural-language description (or pipe via stdin)")
+    pg.add_argument("-a", "--agent", help="agent id (use a workflow-aware agent for best results)")
+    pg.add_argument("-m", "--model", help="model name (default: gemini-2.5-flash)")
+    pg.add_argument("-o", "--out", help="output path (default: examples/NN_<slug>.py)")
+    pg.set_defaults(func=cmd_gen)
 
     known = {a.dest for a in sub._choices_actions}  # type: ignore[attr-defined]
     if argv and argv[0] not in known and not argv[0].startswith("-"):
