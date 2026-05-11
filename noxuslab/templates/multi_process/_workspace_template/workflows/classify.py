@@ -1,13 +1,16 @@
-"""Noxus workflow: classify one input for `__workspace__.__process__`.
+"""Noxus workflow: classify one input for workspace `__workspace__`.
 
 Push to the Noxus platform with `noxuslab push`:
 
-    noxuslab push __workspace__/__process__/workflows/classify.py
+    noxuslab push __workspace__/workflows/classify.py
 
 The workflow is a thin in-platform classifier; the detailed Python
 pipeline (logprobs, threshold, decision dataclass) lives in
-`__workspace__/__process__/classifier.py` and is invoked by the
-orchestrator that dispatches off this workflow's output.
+`__workspace__/classifier.py` and is invoked by the orchestrator that
+dispatches off this workflow's output.
+
+Add more workflows next to this one as the process grows; each file
+in `workflows/` is one workflow on the platform.
 """
 
 from __future__ import annotations
@@ -21,7 +24,7 @@ from noxus_sdk.workflows import WorkflowDefinition
 load_dotenv()
 c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 
-wf = WorkflowDefinition(name="__workspace__-__process__-classify")
+wf = WorkflowDefinition(name="__workspace__-classify")
 
 text_in = wf.node("InputNode").config(label="text", type="str")
 

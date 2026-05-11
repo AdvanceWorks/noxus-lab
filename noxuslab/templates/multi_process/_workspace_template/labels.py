@@ -1,6 +1,6 @@
-"""Label set for the `__workspace__.__process__` classifier.
+"""Label set for workspace `__workspace__`.
 
-One module so the workflow file, the classifier and the tests all
+One module so the workflow files, the classifier and the tests all
 import from a single source of truth. Add or rename a label here and
 nowhere else.
 """

@@ -47,14 +47,18 @@ def test_init_multi_process_scaffolds(tmp_path: Path):
     target = tmp_path / "acme_processes"
     rc = main(["init", "--multi-process", "--no-interactive", str(target)])
     assert rc == 0
-    # Default workspace layout
-    assert (target / "agents" / "__init__.py").is_file()
-    assert (target / "agents" / "example_process" / "classifier.py").is_file()
-    assert (target / "agents" / "example_process" / "labels.py").is_file()
-    assert (target / "agents" / "example_process" / "tests" / "test_classifier.py").is_file()
-    assert (target / "agents" / "example_process" / "test_fixtures" / "example_a.txt").is_file()
+    # Default workspace = one folder named `example_workspace`, no nesting.
+    assert (target / "example_workspace" / "__init__.py").is_file()
+    assert (target / "example_workspace" / "classifier.py").is_file()
+    assert (target / "example_workspace" / "labels.py").is_file()
+    assert (target / "example_workspace" / "tests" / "test_classifier.py").is_file()
+    assert (target / "example_workspace" / "test_fixtures" / "README.md").is_file()
+    assert (target / "example_workspace" / "agents" / "README.md").is_file()
+    assert (target / "example_workspace" / "knowledge" / "README.md").is_file()
+    assert (target / "example_workspace" / "workflows" / "classify.py").is_file()
     assert (target / "conftest.py").is_file()
     assert (target / "docs" / "architecture.md").is_file()
+    assert (target / "docs" / "adding_a_workspace.md").is_file()
     assert (target / ".github" / "workflows" / "ci.yml").is_file()
     assert (target / ".env.example").is_file()
     assert (target / ".noxuslab-template-version").is_file()
@@ -67,10 +71,9 @@ def test_init_multi_process_scaffolds(tmp_path: Path):
     assert (target / "pyproject.toml").is_file()
     assert not (target / "pyproject.toml.tpl").exists()
     # The classifier imports the primitive from noxuslab, not a local copy
-    classifier = (target / "agents" / "example_process" / "classifier.py").read_text(
-        encoding="utf-8"
-    )
+    classifier = (target / "example_workspace" / "classifier.py").read_text(encoding="utf-8")
     assert "from noxuslab.classify import" in classifier
+    assert "from example_workspace.labels" in classifier
 
 
 def test_init_multi_process_renders_template_vars(tmp_path: Path):
@@ -79,7 +82,7 @@ def test_init_multi_process_renders_template_vars(tmp_path: Path):
     assert rc == 0
     pyproj = (target / "pyproject.toml").read_text(encoding="utf-8")
     assert 'name = "acme_processes"' in pyproj
-    assert '"agents"' in pyproj
+    assert '"example_workspace"' in pyproj
     readme = (target / "README.md").read_text(encoding="utf-8")
     assert "# acme_processes" in readme
     assert "{project_name}" not in readme
@@ -94,24 +97,23 @@ def test_init_multi_process_with_custom_workspaces(tmp_path: Path):
             "--multi-process",
             "--no-interactive",
             "--workspace",
-            "hr_agents:hr_requests",
+            "hr_requests",
             "--workspace",
-            "cf_agents",
+            "cf_orders",
             str(target),
         ]
     )
     assert rc == 0
-    assert (target / "hr_agents" / "hr_requests" / "classifier.py").is_file()
-    assert (target / "cf_agents" / "example_process" / "classifier.py").is_file()
-    # Placeholders substituted in identifiers and paths
-    classifier = (target / "hr_agents" / "hr_requests" / "classifier.py").read_text(
-        encoding="utf-8"
-    )
-    assert "from hr_agents.hr_requests.labels" in classifier
+    assert (target / "hr_requests" / "classifier.py").is_file()
+    assert (target / "cf_orders" / "classifier.py").is_file()
+    # Placeholders substituted in identifiers and module paths
+    classifier = (target / "hr_requests" / "classifier.py").read_text(encoding="utf-8")
+    assert "from hr_requests.labels" in classifier
     assert "__workspace__" not in classifier
     pyproj = (target / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"hr_agents"' in pyproj and '"cf_agents"' in pyproj
-    assert '"--cov=hr_agents"' in pyproj
+    assert '"hr_requests"' in pyproj and '"cf_orders"' in pyproj
+    assert '"--cov=hr_requests"' in pyproj
+    assert '"--cov=cf_orders"' in pyproj
 
 
 def test_init_multi_process_into_git_only_dir(tmp_path: Path):
@@ -121,7 +123,41 @@ def test_init_multi_process_into_git_only_dir(tmp_path: Path):
     (target / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
     rc = main(["init", "--multi-process", "--no-interactive", str(target)])
     assert rc == 0
-    assert (target / "agents" / "example_process" / "classifier.py").is_file()
+    assert (target / "example_workspace" / "classifier.py").is_file()
+
+
+def test_init_multi_process_rejects_invalid_workspace_name(tmp_path: Path, capsys):
+    target = tmp_path / "demo"
+    rc = main(
+        [
+            "init",
+            "--multi-process",
+            "--no-interactive",
+            "--workspace",
+            "not-an-identifier",
+            str(target),
+        ]
+    )
+    assert rc == 1
+    assert "not a valid Python identifier" in capsys.readouterr().err
+
+
+def test_init_multi_process_rejects_duplicate_workspaces(tmp_path: Path, capsys):
+    target = tmp_path / "demo"
+    rc = main(
+        [
+            "init",
+            "--multi-process",
+            "--no-interactive",
+            "--workspace",
+            "hr_requests",
+            "--workspace",
+            "hr_requests",
+            str(target),
+        ]
+    )
+    assert rc == 1
+    assert "unique" in capsys.readouterr().err
 
 
 def test_did_you_mean_hint(capsys):

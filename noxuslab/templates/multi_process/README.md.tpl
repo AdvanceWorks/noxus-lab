@@ -3,10 +3,11 @@
 A multi-workspace automation repository scaffolded by
 `noxuslab init --multi-process` (template version `{version}`).
 
-Every "workspace" folder corresponds to one workspace on the Noxus
-platform. Inside each workspace, every "process" folder is one
-end-to-end automation (a label set, a Python classifier, one or more
-Noxus workflow definitions, fixture data, and tests).
+Each top-level folder is **one workspace on the Noxus platform = one
+end-to-end process**. Inside each workspace folder live the labels,
+classifier, workflows, agents, knowledge sources, fixtures, and tests
+for that one process. Workspaces are independent; they never import
+from each other.
 
 The repo carries **no infrastructure code of its own** — the Azure
 OpenAI client wrapper, the classification primitive, the test fixture
@@ -35,19 +36,19 @@ imported from there. New repos stay tiny by design.
 | `AZURE_OPENAI_API_KEY`    | Calls Azure OpenAI (GPT-4o)          |
 | `AZURE_OPENAI_ENDPOINT`   | Your Azure OpenAI resource URL       |
 
-## workspaces
+## workspaces (one per process)
 
 {workspaces_table}
 
-## adding a process to a workspace
+## adding a workspace
 
-See [docs/adding_a_process.md](docs/adding_a_process.md). The short version:
+See [docs/adding_a_workspace.md](docs/adding_a_workspace.md). The short version:
 
-1. `cp -r <workspace>/<existing_process> <workspace>/<new_process>`
+1. `noxuslab init --multi-process --workspace <new_name> .` (or `cp -r <existing> <new_name>`)
 2. Replace the labels in `labels.py` and the prompt
 3. Replace the fixtures under `test_fixtures/`
-4. `pytest <workspace>/<new_process>` — green before commit
-5. Add a row in this README
+4. `pytest <new_name>` — green before commit
+5. Add a row in this README, in `pyproject.toml` (`packages`, `--cov`, `testpaths`), and in `pyrightconfig.json` (`include`)
 
 ## verify
 

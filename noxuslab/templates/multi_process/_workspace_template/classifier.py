@@ -1,16 +1,16 @@
-"""Pure-Python classifier for `__workspace__.__process__`.
+"""Pure-Python classifier for workspace `__workspace__`.
 
-Wraps `noxuslab.classify.classify` with this process's labels and
+Wraps `noxuslab.classify.classify` with this workspace's labels and
 prompt, plus the threshold decision from `noxuslab.classify.decide`.
 No SDK, no platform code; just `text in, ClassificationResult out`,
-so the rest of the platform stays unit-testable.
+so the rest of the pipeline stays unit-testable.
 
-The Noxus workflow under `workflows/` is the production entry point;
-it calls into this module after extracting the input.
+The Noxus workflows under `workflows/` are the production entry
+points; they call into this module after extracting the input.
 
 Usage from the command line (one-shot, hits Azure):
 
-    python -m __workspace__.__process__.classifier test_fixtures/example.txt
+    python -m __workspace__.classifier test_fixtures/example_a.txt
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from __workspace__.__process__.labels import LABELS, REVIEW_LABELS, SYSTEM_PROMPT
+from __workspace__.labels import LABELS, REVIEW_LABELS, SYSTEM_PROMPT
 from noxuslab.classify import (
     ClassificationResult,
     build_client,
@@ -58,7 +58,7 @@ def classify_text(
 
 def _cli() -> int:
     if len(sys.argv) != 2:
-        sys.exit("usage: python -m __workspace__.__process__.classifier <path/to/input.txt>")
+        sys.exit("usage: python -m __workspace__.classifier <path/to/input.txt>")
     text = Path(sys.argv[1]).read_text(encoding="utf-8")
     result = classify_text(text)
     print(result.to_dict())

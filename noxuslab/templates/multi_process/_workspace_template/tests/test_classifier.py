@@ -1,4 +1,4 @@
-"""Offline tests for `__workspace__.__process__.classifier`.
+"""Offline tests for `__workspace__.classifier`.
 
 Uses the `fake_azure_client` fixture from the top-level `conftest.py`
 (itself backed by `noxuslab.testing.make_fake_azure_client`) so we
@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from __workspace__.__process__.classifier import classify_text
-from __workspace__.__process__.labels import LABELS, REVIEW_LABELS
+from __workspace__.classifier import classify_text
+from __workspace__.labels import LABELS, REVIEW_LABELS
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "test_fixtures"
 

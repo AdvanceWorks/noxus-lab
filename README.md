@@ -10,7 +10,7 @@ the terminal.
 
 ## install
 
-    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.11.1
+    pip install git+https://github.com/AdvanceWorks/noxus-lab.git@v0.12.0
     noxuslab init my-noxus-project
     cd my-noxus-project
     noxuslab doctor

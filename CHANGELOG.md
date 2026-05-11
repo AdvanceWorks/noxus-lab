@@ -5,6 +5,43 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-05-11
+
+### Changed
+- **BREAKING — `multi_process` template restructured: workspace = process.**
+  The previous two-level `<workspace>/<process>/...` layout is replaced
+  by a flat `<workspace>/...`. Each top-level folder is now one
+  workspace on the Noxus platform AND one end-to-end automated
+  process, owning its own labels, classifier, workflows, agents,
+  knowledge sources, fixtures, and tests. This matches the platform's
+  governance model (KBs, agents, secrets and audit trails are scoped
+  per workspace) and lets each process have its own `CODEOWNERS`.
+- **BREAKING — `noxuslab init --multi-process --workspace NAME`** no
+  longer accepts the `NAME:PROCESS` syntax. Each `--workspace` flag
+  creates one top-level package; the workspace name *is* the process
+  name. Default value when `--workspace` is omitted is now
+  `example_workspace` (was `agents:example_process`).
+- **BREAKING — bundled template skeleton.** The two skeletons
+  `_workspace_template/` and `_process_template/` were collapsed into
+  one `_workspace_template/`. The `__process__` placeholder is gone;
+  only `__workspace__` remains.
+- **BREAKING — module import paths in scaffolded repos.** Imports
+  changed from `<workspace>.<process>.classifier` to
+  `<workspace>.classifier`. Workflow names changed from
+  `<workspace>-<process>-classify` to `<workspace>-classify`.
+
+### Added
+- **`agents/` and `knowledge/` placeholder folders per workspace** in
+  the multi-process template, each with a README explaining the
+  intended usage. No code is generated there — the directories are
+  reserved for the workspace's Noxus agents and KB source documents.
+- **`docs/adding_a_workspace.md`** in the template (replaces
+  `docs/adding_a_process.md`) with the new recipe and the build
+  wiring checklist (`pyproject.toml`, `pyrightconfig.json`).
+- **CLI validation**: `noxuslab init --multi-process --workspace`
+  rejects names that are not valid Python identifiers and rejects
+  duplicates with a clear error message.
+
 ## [0.11.1] - 2026-05-11
 
 ### Changed

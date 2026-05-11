@@ -19,9 +19,10 @@ ignore = [
 
 [lint.per-file-ignores]
 "conftest.py" = ["S"]
-"*/*/tests/**" = ["S", "B011"]
-"*/*/test_fixtures/**" = ["E501"]
-"*/*/workflows/**" = ["E402", "F401"]
+"*/tests/**" = ["S", "B011"]
+"*/test_fixtures/**" = ["E501"]
+"*/workflows/**" = ["E402", "F401"]
+"*/agents/**" = ["E402", "F401"]
 
 [format]
 quote-style = "double"

@@ -178,33 +178,25 @@ def _scaffold_single(target: Path) -> None:
     (target / "README.md").write_text(_scaffold_readme(target.name), encoding="utf-8")
 
 
-def _parse_workspace_spec(spec: str) -> tuple[str, str]:
-    """Turn `"hr_agents"` or `"hr_agents:hr_requests"` into `(workspace, process)`.
-
-    Defaults the process to `example_process` when not given. Both names
-    must be valid Python identifiers so they can be imported as
-    `<workspace>.<process>.classifier`.
-    """
-    if ":" in spec:
-        workspace, process = spec.split(":", 1)
-    else:
-        workspace, process = spec, "example_process"
-    workspace = workspace.strip()
-    process = process.strip()
-    for name, kind in ((workspace, "workspace"), (process, "process")):
-        if not name.isidentifier():
-            raise BadFile(f"{kind} name {name!r} is not a valid Python identifier")
-    return workspace, process
+def _validate_workspace_name(name: str) -> str:
+    """Validate that `name` is a Python identifier usable as a top-level package."""
+    name = name.strip()
+    if not name.isidentifier():
+        raise BadFile(f"workspace name {name!r} is not a valid Python identifier")
+    return name
 
 
 def _scaffold_multi_process(target: Path, workspaces: list[str] | None = None) -> None:
-    """Multi-workspace layout: <workspace>/<process>/... + conftest + docs.
+    """Multi-workspace layout: <workspace>/... + conftest + docs.
 
-    The repo carries no infrastructure code: the Azure client wrapper,
-    the classification primitive and the test fixtures all live in
-    `noxuslab` and are imported. New workspaces are materialised from
-    the bundled `_workspace_template` and `_process_template` skeletons,
-    with `__workspace__` / `__process__` placeholders substituted.
+    Each workspace folder is one workspace on the Noxus platform AND
+    one end-to-end process (labels, classifier, workflows, agents,
+    knowledge, fixtures, tests). The repo carries no infrastructure
+    code: the Azure client wrapper, the classification primitive and
+    the test fixtures all live in `noxuslab` and are imported. New
+    workspaces are materialised from the bundled `_workspace_template`
+    skeleton, with the `__workspace__` placeholder substituted in
+    file contents and path components.
     """
     src = Path(__file__).resolve().parent / "templates" / "multi_process"
     if not src.is_dir():
@@ -212,16 +204,15 @@ def _scaffold_multi_process(target: Path, workspaces: list[str] | None = None) -
             f"multi-process template missing at {src}. Reinstall noxuslab from a complete checkout."
         )
 
-    pairs = [_parse_workspace_spec(s) for s in (workspaces or ["agents:example_process"])]
-    if len({w for w, _ in pairs}) != len(pairs):
+    names = [_validate_workspace_name(s) for s in (workspaces or ["example_workspace"])]
+    if len(set(names)) != len(names):
         raise BadFile("workspace names must be unique")
 
     workspace_template = src / "_workspace_template"
-    process_template = src / "_process_template"
 
-    # Copy root files (everything except the two skeleton folders).
+    # Copy root files (everything except the skeleton folder).
     for item in src.iterdir():
-        if item.name in {"_workspace_template", "_process_template"}:
+        if item.name == "_workspace_template":
             continue
         dest = target / item.name
         if item.is_dir():
@@ -229,24 +220,22 @@ def _scaffold_multi_process(target: Path, workspaces: list[str] | None = None) -
         else:
             shutil.copy2(item, dest)
 
-    # Materialise each workspace + its first process from the skeletons.
-    for workspace, process in pairs:
+    # Materialise each workspace from the skeleton.
+    for workspace in names:
         ws_dest = target / workspace
-        _copy_with_placeholders(workspace_template, ws_dest, workspace=workspace, process=process)
-        proc_dest = ws_dest / process
-        _copy_with_placeholders(process_template, proc_dest, workspace=workspace, process=process)
+        _copy_with_placeholders(workspace_template, ws_dest, workspace=workspace)
 
     # Render top-level `*.tpl` files now that we know the workspace set.
     project_name = target.resolve().name
-    workspace_packages = ", ".join(f'"{w}"' for w, _ in pairs)
-    coverage_args = "\n".join(f'  "--cov={w}",' for w, _ in pairs)
-    testpaths = ", ".join(f'"{w}"' for w, _ in pairs)
-    workspace_includes = ", ".join(f'"{w}"' for w, _ in pairs)
+    workspace_packages = ", ".join(f'"{w}"' for w in names)
+    coverage_args = "\n".join(f'  "--cov={w}",' for w in names)
+    testpaths = ", ".join(f'"{w}"' for w in names)
+    workspace_includes = ", ".join(f'"{w}"' for w in names)
     workspaces_table_rows = "\n".join(
-        f"| [{w}/]({w}/) | _(replace this with a one-line description)_ |" for w, _ in pairs
+        f"| [{w}/]({w}/) | _(replace this with a one-line description)_ |" for w in names
     )
     workspaces_table = (
-        "| Folder | What it does |\n| ------ | ------------ |\n" + workspaces_table_rows
+        "| Workspace | What it does |\n| --------- | ------------ |\n" + workspaces_table_rows
     )
 
     for tpl in list(target.rglob("*.tpl")):
@@ -265,14 +254,14 @@ def _scaffold_multi_process(target: Path, workspaces: list[str] | None = None) -
     (target / ".noxuslab-template-version").write_text(__version__ + "\n", encoding="utf-8")
 
 
-def _copy_with_placeholders(src: Path, dest: Path, *, workspace: str, process: str) -> None:
-    """Copy `src` to `dest`, replacing `__workspace__` / `__process__` in
-    file contents *and* in path components. Binary files (anything
-    that fails utf-8 decode) are copied byte-for-byte.
+def _copy_with_placeholders(src: Path, dest: Path, *, workspace: str) -> None:
+    """Copy `src` to `dest`, replacing `__workspace__` in file contents
+    *and* in path components. Binary files (anything that fails utf-8
+    decode) are copied byte-for-byte.
     """
 
     def render(text: str) -> str:
-        return text.replace("__workspace__", workspace).replace("__process__", process)
+        return text.replace("__workspace__", workspace)
 
     dest.mkdir(parents=True, exist_ok=True)
     for item in src.rglob("*"):
@@ -727,16 +716,17 @@ def main(argv: list[str] | None = None) -> int:
     pi.add_argument(
         "--multi-process",
         action="store_true",
-        help="scaffold a multi-workspace repo (<workspace>/<process>/) instead of "
-        "the single-workflow layout. Combine with --workspace to pick the workspace names.",
+        help="scaffold a multi-workspace repo (one folder per workspace, where each "
+        "workspace is one end-to-end process) instead of the single-workflow layout. "
+        "Combine with --workspace to pick the workspace names.",
     )
     pi.add_argument(
         "--workspace",
         action="append",
-        metavar="NAME[:PROCESS]",
-        help="create a workspace folder with one starter process. Repeatable. "
-        "Each value is `workspace_name` or `workspace_name:process_name`. "
-        "Default when --multi-process is set: `agents:example_process`.",
+        metavar="NAME",
+        help="create a workspace folder. Repeatable. NAME must be a valid Python "
+        "identifier (it becomes a top-level package). Default when --multi-process is "
+        "set: a single `example_workspace`.",
     )
     pi.add_argument(
         "--interactive",
