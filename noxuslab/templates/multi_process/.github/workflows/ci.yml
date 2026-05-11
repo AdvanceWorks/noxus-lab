@@ -24,19 +24,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      # noxus-lab is currently a private repo. While that is the case, set
-      # a fine-grained PAT with `Contents: Read` on AdvanceWorks/noxus-lab
-      # as the `NOXUSLAB_TOKEN` secret in this repo's settings. When the
-      # secret is absent (e.g. on public forks, or once noxus-lab is made
-      # public) the step is a no-op and pip falls through to anonymous
-      # HTTPS — which is the right behaviour at that point.
-      - name: configure git for private noxuslab dependency
-        if: env.NOXUSLAB_TOKEN != ''
-        env:
-          NOXUSLAB_TOKEN: ${{ secrets.NOXUSLAB_TOKEN }}
-        shell: bash
-        run: |
-          git config --global url."https://x-access-token:${NOXUSLAB_TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .

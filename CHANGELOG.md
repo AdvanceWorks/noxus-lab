@@ -5,6 +5,15 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Removed
+- **`NOXUSLAB_TOKEN` plumbing in the bundled `multi_process` CI
+  template.** `noxus-lab` is now a public repository, so consumers can
+  resolve `noxuslab @ git+https://...` anonymously. The gated git
+  `insteadOf` step and the matching "CI note" paragraph were dropped
+  from the template's `.github/workflows/ci.yml` and `README.md.tpl`.
+  Repos already scaffolded keep working; the step was already a no-op
+  without the secret.
+
 ## [0.12.0] - 2026-05-11
 
 ### Changed
