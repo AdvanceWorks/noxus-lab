@@ -21,6 +21,12 @@ imported from there. New repos stay tiny by design.
     cp .env.example .env                                # then fill it in
     pytest
 
+> **CI note.** While `noxus-lab` is a private repo, the `pip install`
+> step in CI needs to clone it. Add a fine-grained PAT with
+> `Contents: Read` on `AdvanceWorks/noxus-lab` as a `NOXUSLAB_TOKEN`
+> repository secret. Locally nothing is needed — your usual git
+> credentials are reused.
+
 `.env` holds these secrets:
 
 | Variable                  | Why                                  |

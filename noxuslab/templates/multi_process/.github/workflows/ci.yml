@@ -5,22 +5,39 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   lint-test:
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.10", "3.12"]
-    runs-on: ${{ matrix.os }}
+        include:
+          - { os: ubuntu-latest,  python: "3.10" }
+          - { os: ubuntu-latest,  python: "3.12" }
+          - { os: windows-latest, python: "3.12" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python }}
           cache: pip
+      # noxus-lab is currently a private repo. While that is the case, set
+      # a fine-grained PAT with `Contents: Read` on AdvanceWorks/noxus-lab
+      # as the `NOXUSLAB_TOKEN` secret in this repo's settings. When the
+      # secret is absent (e.g. on public forks, or once noxus-lab is made
+      # public) the step is a no-op and pip falls through to anonymous
+      # HTTPS — which is the right behaviour at that point.
+      - name: configure git for private noxuslab dependency
+        if: env.NOXUSLAB_TOKEN != ''
+        env:
+          NOXUSLAB_TOKEN: ${{ secrets.NOXUSLAB_TOKEN }}
+        shell: bash
+        run: |
+          git config --global url."https://x-access-token:${NOXUSLAB_TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .
-      - run: pyright
       - run: pytest

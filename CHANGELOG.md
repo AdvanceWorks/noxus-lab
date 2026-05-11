@@ -5,6 +5,25 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-05-11
+
+### Changed
+- **Bundled `multi_process` CI template** rewritten to mirror this
+  repo's `ci.yml`: triggers on `push` to `main` and on every
+  `pull_request`, runs only `ruff check + ruff format --check + pytest`
+  on a 3-job matrix (Linux 3.10, Linux 3.12, Windows 3.12). `pyright`
+  is dropped from CI — it stays a local + pre-commit check, matching
+  the noxus-lab repo itself.
+- The CI template now configures git's `insteadOf` with an optional
+  `NOXUSLAB_TOKEN` repo secret so `pip install -e ".[dev]"` can resolve
+  the `noxuslab @ git+https://github.com/AdvanceWorks/noxus-lab.git@v...`
+  pin while noxus-lab is a private repository. The step is a no-op
+  when the secret is absent, so CI keeps working unchanged the day
+  noxus-lab goes public.
+- `noxus-lab`'s own `ci.yml` switched from `on: [push, pull_request]`
+  (any branch) to `push: branches: [main] + pull_request:` for clean
+  branch semantics.
+
 ## [0.11.0] - 2026-05-11
 
 ### Added
