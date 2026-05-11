@@ -1,24 +1,31 @@
-"""Thin wrapper around the Azure OpenAI Python client.
+"""LLM-classifier primitives shared by every `noxuslab init` repo.
 
-Why this exists:
+A classification process is the same shape everywhere: pick exactly one
+label from a fixed set, score the model's confidence with the
+first-token logprob, and route low-confidence picks to human review.
+This module owns that shape so individual processes only carry their
+labels and prompt — no infrastructure code.
 
-- One place to read Azure credentials from the environment.
-- One place to build a chat-completion request that returns both the
-  text answer and the per-token logprobs we use for confidence scoring.
-- One place that knows how to fail loudly when the deployment is
-  misconfigured (wrong region, wrong API version, missing role).
+Public surface:
 
-Stays tiny on purpose. Specialised prompting lives in each process.
+- `TokenScore`           — one label + its log-probability
+- `ClassificationResult` — final per-item record (label, confidence, needs_review)
+- `build_client()`       — `openai.AzureOpenAI` from env vars
+- `classify()`           — one chat-completion call, returns `TokenScore`
+- `decide()`             — apply the threshold, return `ClassificationResult`
+
+`openai` is imported lazily so the rest of the CLI does not pay for it.
 """
 
 from __future__ import annotations
 
 import math
 import os
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING, Any
 
-from openai import AzureOpenAI
+if TYPE_CHECKING:
+    from openai import AzureOpenAI
 
 
 @dataclass(frozen=True)
@@ -38,6 +45,27 @@ class TokenScore:
         return math.exp(self.logprob)
 
 
+@dataclass(frozen=True)
+class ClassificationResult:
+    """The output every process emits per item.
+
+    - `label`: the chosen label from the process's label set.
+    - `confidence`: probability in [0, 1], computed from the model's logprob.
+    - `needs_review`: True when `confidence < threshold` or the label is
+      one of `review_labels`. When True, the downstream workflow should
+      escalate to a human reviewer instead of acting on the label.
+    - `threshold`: the threshold that was applied (for auditability).
+    """
+
+    label: str
+    confidence: float
+    needs_review: bool
+    threshold: float
+
+    def to_dict(self) -> dict[str, object]:
+        return asdict(self)
+
+
 def build_client() -> AzureOpenAI:
     """Construct an `AzureOpenAI` client from environment variables.
 
@@ -47,6 +75,8 @@ def build_client() -> AzureOpenAI:
     - `AZURE_OPENAI_ENDPOINT`
     - `AZURE_OPENAI_API_VERSION` (default: `2024-08-01-preview`)
     """
+    from openai import AzureOpenAI
+
     return AzureOpenAI(
         api_key=_required("AZURE_OPENAI_API_KEY"),
         azure_endpoint=_required("AZURE_OPENAI_ENDPOINT"),
@@ -90,6 +120,27 @@ def classify(
     if choice.logprobs and choice.logprobs.content:
         logprob = choice.logprobs.content[0].logprob
     return TokenScore(token=label, logprob=logprob)
+
+
+def decide(
+    score: TokenScore,
+    *,
+    threshold: float,
+    review_labels: tuple[str, ...] = ("unknown", "other"),
+) -> ClassificationResult:
+    """Apply the threshold to a `TokenScore` and produce the final result.
+
+    Labels in `review_labels` always trigger review, regardless of how
+    confident the model is.
+    """
+    confidence = score.probability
+    needs_review = confidence < threshold or score.token in review_labels
+    return ClassificationResult(
+        label=score.token,
+        confidence=confidence,
+        needs_review=needs_review,
+        threshold=threshold,
+    )
 
 
 def _match_label(reply: str, allowed: list[str]) -> str:

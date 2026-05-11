@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "{project_name}"
 version = "0.1.0"
-description = "Multi-process automation built on noxus-lab and the Noxus AI platform."
+description = "Multi-workspace automation built on noxus-lab and the Noxus AI platform."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -18,10 +18,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-  "noxus-sdk>=0.5.0",
-  "openai>=1.40.0",
-  "python-dotenv>=1.0.0",
-  "pydantic>=2.7",
+  "noxuslab @ git+https://github.com/AdvanceWorks/noxus-lab.git@v{version}",
 ]
 
 [project.optional-dependencies]
@@ -35,7 +32,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["shared", "processes"]
+packages = [{workspace_packages}]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -43,19 +40,18 @@ addopts = [
   "-q",
   "--strict-markers",
   "--strict-config",
-  "--cov=shared",
-  "--cov=processes",
+{coverage_args}
   "--cov-report=term-missing",
   "--cov-fail-under=70",
 ]
-testpaths = ["tests", "processes"]
+testpaths = [{testpaths}]
 markers = [
   "live: hits the live Azure OpenAI / Noxus backend (requires keys)",
 ]
 
 [tool.coverage.run]
 branch = true
-source = ["shared", "processes"]
+source = [{workspace_packages}]
 
 [tool.coverage.report]
 exclude_lines = [

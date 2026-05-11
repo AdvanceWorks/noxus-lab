@@ -1,6 +1,6 @@
 {
-  "include": ["shared", "processes", "tests"],
-  "exclude": [".venv", "build", "dist", "**/__pycache__", "**/sample_data"],
+  "include": [{workspace_includes}, "conftest.py"],
+  "exclude": [".venv", "build", "dist", "**/__pycache__", "**/test_fixtures"],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.10",

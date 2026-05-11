@@ -1,8 +1,8 @@
-"""Label set for the support-routing classifier.
+"""Label set for the `__workspace__.__process__` classifier.
 
-One module so the workflow file, the classifier, the tests and the
-sample-data generator all import from a single source of truth. If
-you add a label, you only edit this file.
+One module so the workflow file, the classifier and the tests all
+import from a single source of truth. Add or rename a label here and
+nowhere else.
 """
 
 from __future__ import annotations
@@ -13,10 +13,8 @@ from typing import Final
 #: Each label starts with a unique first token so the first-token logprob
 #: is a clean confidence signal.
 LABELS: Final[tuple[str, ...]] = (
-    "billing",
-    "technical",
-    "sales",
-    "general",
+    "example_a",
+    "example_b",
     "other",
 )
 
@@ -25,12 +23,10 @@ REVIEW_LABELS: Final[tuple[str, ...]] = ("other",)
 
 
 SYSTEM_PROMPT: Final[str] = (
-    "You are a support triage assistant. Classify the email below into "
+    "You are a triage assistant. Classify the input below into "
     "exactly ONE of these labels:\n\n"
-    "  billing    - invoices, charges, refunds, payment problems\n"
-    "  technical  - bugs, errors, integration failures, outages\n"
-    "  sales      - pricing, demos, contract upgrades, new accounts\n"
-    "  general    - how-to questions, documentation, onboarding\n"
+    "  example_a  - replace this with the real label and its meaning\n"
+    "  example_b  - replace this too\n"
     "  other      - anything that does not clearly fit the above\n\n"
     "Reply with the single label, lowercase, no punctuation, no explanation."
 )

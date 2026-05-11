@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "noxuslab"
-version = "0.10.0"
+version = "0.11.0"
 description = "A terse sandbox and CLI for the Noxus AI Python SDK."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,6 +24,7 @@ classifiers = [
 dependencies = [
   "noxus-sdk>=0.5.0",
   "python-dotenv>=1.0.0",
+  "openai>=1.40.0",
 ]
 
 [project.optional-dependencies]

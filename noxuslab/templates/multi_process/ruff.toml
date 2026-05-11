@@ -18,10 +18,10 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"tests/**" = ["S", "B011"]
-"processes/*/tests/**" = ["S", "B011"]
-"processes/*/sample_data/**" = ["E501"]
-"processes/*/workflows/**" = ["E402", "F401"]
+"conftest.py" = ["S"]
+"*/*/tests/**" = ["S", "B011"]
+"*/*/test_fixtures/**" = ["E501"]
+"*/*/workflows/**" = ["E402", "F401"]
 
 [format]
 quote-style = "double"

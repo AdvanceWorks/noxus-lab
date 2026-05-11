@@ -47,23 +47,30 @@ def test_init_multi_process_scaffolds(tmp_path: Path):
     target = tmp_path / "acme_processes"
     rc = main(["init", "--multi-process", "--no-interactive", str(target)])
     assert rc == 0
-    # Layout
-    assert (target / "shared" / "azure_openai.py").is_file()
-    assert (target / "shared" / "classification.py").is_file()
-    assert (target / "processes" / "support_routing" / "classifier.py").is_file()
-    assert (target / "processes" / "support_routing" / "labels.py").is_file()
-    assert (target / "processes" / "support_routing" / "tests" / "test_classifier.py").is_file()
-    assert (target / "processes" / "support_routing" / "sample_data" / "billing.txt").is_file()
-    assert (target / "tests" / "test_classification.py").is_file()
+    # Default workspace layout
+    assert (target / "agents" / "__init__.py").is_file()
+    assert (target / "agents" / "example_process" / "classifier.py").is_file()
+    assert (target / "agents" / "example_process" / "labels.py").is_file()
+    assert (target / "agents" / "example_process" / "tests" / "test_classifier.py").is_file()
+    assert (target / "agents" / "example_process" / "test_fixtures" / "example_a.txt").is_file()
+    assert (target / "conftest.py").is_file()
     assert (target / "docs" / "architecture.md").is_file()
     assert (target / ".github" / "workflows" / "ci.yml").is_file()
     assert (target / ".env.example").is_file()
     assert (target / ".noxuslab-template-version").is_file()
+    # No infrastructure code copied locally
+    assert not (target / "shared").exists()
+    assert not (target / "processes").exists()
     # Templates rendered + originals removed
     assert (target / "README.md").is_file()
     assert not (target / "README.md.tpl").exists()
     assert (target / "pyproject.toml").is_file()
     assert not (target / "pyproject.toml.tpl").exists()
+    # The classifier imports the primitive from noxuslab, not a local copy
+    classifier = (target / "agents" / "example_process" / "classifier.py").read_text(
+        encoding="utf-8"
+    )
+    assert "from noxuslab.classify import" in classifier
 
 
 def test_init_multi_process_renders_template_vars(tmp_path: Path):
@@ -72,10 +79,49 @@ def test_init_multi_process_renders_template_vars(tmp_path: Path):
     assert rc == 0
     pyproj = (target / "pyproject.toml").read_text(encoding="utf-8")
     assert 'name = "acme_processes"' in pyproj
+    assert '"agents"' in pyproj
     readme = (target / "README.md").read_text(encoding="utf-8")
     assert "# acme_processes" in readme
     assert "{project_name}" not in readme
     assert "{version}" not in readme
+
+
+def test_init_multi_process_with_custom_workspaces(tmp_path: Path):
+    target = tmp_path / "demo"
+    rc = main(
+        [
+            "init",
+            "--multi-process",
+            "--no-interactive",
+            "--workspace",
+            "hr_agents:hr_requests",
+            "--workspace",
+            "cf_agents",
+            str(target),
+        ]
+    )
+    assert rc == 0
+    assert (target / "hr_agents" / "hr_requests" / "classifier.py").is_file()
+    assert (target / "cf_agents" / "example_process" / "classifier.py").is_file()
+    # Placeholders substituted in identifiers and paths
+    classifier = (target / "hr_agents" / "hr_requests" / "classifier.py").read_text(
+        encoding="utf-8"
+    )
+    assert "from hr_agents.hr_requests.labels" in classifier
+    assert "__workspace__" not in classifier
+    pyproj = (target / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"hr_agents"' in pyproj and '"cf_agents"' in pyproj
+    assert '"--cov=hr_agents"' in pyproj
+
+
+def test_init_multi_process_into_git_only_dir(tmp_path: Path):
+    target = tmp_path / "existing"
+    target.mkdir()
+    (target / ".git").mkdir()
+    (target / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    rc = main(["init", "--multi-process", "--no-interactive", str(target)])
+    assert rc == 0
+    assert (target / "agents" / "example_process" / "classifier.py").is_file()
 
 
 def test_did_you_mean_hint(capsys):

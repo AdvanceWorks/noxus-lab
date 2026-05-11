@@ -7,22 +7,22 @@ A two-layer repository on top of two platforms.
 | Inbound channel (Outlook / form / webhook / file drop)      |
 |        |                                                    |
 |        v                                                    |
-| Ingestion         <- open question: Graph API vs Power Automate
+| Ingestion         <- repo-specific (Graph API / Power Automate)
 |        |                                                    |
 |        v                                                    |
-| Noxus workflow:  processes/<name>/workflows/...             |
+| Noxus workflow:  <workspace>/<process>/workflows/...        |
 |        |                                                    |
 |        v                                                    |
-| Python classifier:  processes.<name>.classifier             |
+| Python classifier:  <workspace>.<process>.classifier        |
 |        |                                                    |
 |        v                                                    |
-| Shared primitive:   shared.azure_openai.classify (logprobs) |
+| Shared primitive:   noxuslab.classify.classify (logprobs)   |
 |        |                                                    |
 |        v                                                    |
 | Azure OpenAI (GPT-4o) -> token + logprob                    |
 |        |                                                    |
 |        v                                                    |
-| Threshold decision: shared.classification.decide            |
+| Threshold decision: noxuslab.classify.decide                |
 |        |                                                    |
 |        v                                                    |
 | ClassificationResult { label, confidence, needs_review, ... }|
@@ -34,7 +34,19 @@ A two-layer repository on top of two platforms.
 +-------------------------------------------------------------+
 ```
 
-## why two layers
+## why this layout
+
+- **Workspace folder** = one workspace on the Noxus platform. All the
+  workflows and agents pushed from inside that folder belong to the
+  same Noxus workspace.
+- **Process folder** = one end-to-end automation inside that workspace
+  (a label set, a Python classifier, the Noxus workflow definitions,
+  fixture data, and tests).
+- **No `shared/` folder.** Cross-cutting code (Azure client wrapper,
+  classification primitive, fake test client) lives in the
+  `noxuslab` package and is imported. New repos stay tiny.
+
+## why two layers per process
 
 - **Noxus workflow** — visible in the UI, editable by ops, audit
   trail per run, integrates with Outlook/SharePoint via existing
@@ -48,9 +60,7 @@ A two-layer repository on top of two platforms.
 When the platform grows a primitive (e.g. native logprobs in
 `TextGenerationNode`), collapse the Python layer.
 
-## why one repo for all processes
+## why one repo for many workspaces
 
 - One CI pipeline, one set of dependencies, one place to review.
-- Cross-cutting helpers (`shared/`) are extracted from real
-  duplication, not invented up front.
 - The customer reviews **one** repo per quarter, not many.

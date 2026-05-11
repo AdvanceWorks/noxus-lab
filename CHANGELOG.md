@@ -5,19 +5,40 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-11
+
 ### Added
-- **`noxuslab init --multi-process`** scaffolds a multi-process repo
-  layout (`shared/` cross-cutting helpers + `processes/<name>/` one
-  folder per automation) instead of the single-workflow examples
-  layout. The bundled example process `support_routing` ships with a
-  generic 5-label classifier (`billing`, `technical`, `sales`,
-  `general`, `other`), Azure OpenAI logprob-based confidence, a Noxus
-  workflow definition, sample data, offline tests, CI, pre-commit
-  hooks, and architecture docs — the same shape used in production by
-  the `noxus-ctt` repo, now reusable for any future client.
-- The new `noxuslab/templates/multi_process/` template tree is
-  bundled in the wheel via `[tool.hatch.build.targets.wheel.force-include]`
-  so the scaffold works after `pip install`, not only from a checkout.
+- **`noxuslab.classify`** — promoted the Azure OpenAI client wrapper
+  and the classification primitive (`TokenScore`, `build_client`,
+  `classify`, `ClassificationResult`, `decide`) out of the
+  `multi_process` template and into the `noxuslab` package itself.
+  Repos scaffolded by `noxuslab init` now `from noxuslab.classify
+  import ...` instead of carrying their own `shared/` copy.
+- **`noxuslab.testing.make_fake_azure_client`** — the test fixture
+  factory (an `openai.AzureOpenAI` stand-in) is now also part of the
+  package; the template's `conftest.py` is a one-liner that re-exports
+  it as a pytest fixture.
+- **`noxuslab init --multi-process --workspace NAME[:PROCESS]`** —
+  repeatable flag that materialises one workspace folder per value
+  (each workspace = one workspace on the Noxus platform). The default
+  is `agents:example_process` to keep the zero-flag path working.
+- **`noxuslab init` accepts a target dir that already contains
+  `.git/` or `.env`** so an existing repo can be initialised in place
+  without re-cloning.
+- `openai>=1.40.0` is now a runtime dependency of `noxuslab`.
+
+### Changed
+- **`noxuslab init --multi-process` template** rewritten end-to-end:
+  no `shared/`, no `processes/`. Instead, one folder per workspace
+  (`<workspace>/<process>/`), each process imports its primitives
+  from `noxuslab.classify`. Repos scaffolded with this command now
+  carry **no infrastructure code of their own** — labels, prompts,
+  fixtures and Noxus workflow definitions are the only user-written
+  files. Generated `pyproject.toml` depends only on `noxuslab` (which
+  pulls `noxus-sdk` and `openai` transitively).
+- Generated `conftest.py`, `ruff.toml` and `pyrightconfig.json` are
+  rewritten to match the new `<workspace>/<process>/` shape and the
+  `test_fixtures/` (was `sample_data/`) convention.
 
 ### Changed
 - **Examples** drop the redundant `base_url=os.environ.get("NOXUS_BACKEND_URL")`

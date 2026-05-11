@@ -1,27 +1,25 @@
 # {project_name}
 
-A multi-process automation repository built on top of
-[`noxuslab`](https://github.com/AdvanceWorks/noxus-lab) and the
-Noxus AI platform.
+A multi-workspace automation repository scaffolded by
+`noxuslab init --multi-process` (template version `{version}`).
 
-Each automation lives as an isolated module under
-[processes/](processes/). Cross-cutting helpers live in
-[shared/](shared/). One repo, one CI, one place to review.
+Every "workspace" folder corresponds to one workspace on the Noxus
+platform. Inside each workspace, every "process" folder is one
+end-to-end automation (a label set, a Python classifier, one or more
+Noxus workflow definitions, fixture data, and tests).
 
-Scaffolded by `noxuslab init --multi-process` (template version `{version}`).
+The repo carries **no infrastructure code of its own** — the Azure
+OpenAI client wrapper, the classification primitive, the test fixture
+factory, and every CLI command live in
+[`noxuslab`](https://github.com/AdvanceWorks/noxus-lab) and are
+imported from there. New repos stay tiny by design.
 
 ## install
 
     python -m venv .venv && .venv\Scripts\activate     # Windows
     pip install -e ".[dev]"
-    pip install --upgrade git+https://github.com/AdvanceWorks/noxus-lab.git
     cp .env.example .env                                # then fill it in
     pytest
-
-`noxuslab` is the CLI used to push Noxus workflows from this repo to
-the platform; it is installed separately from git so the runtime
-dependencies of this project stay independent of the tool's release
-cadence.
 
 `.env` holds these secrets:
 
@@ -30,39 +28,20 @@ cadence.
 | `NOXUS_API_KEY`           | Talks to the Noxus platform          |
 | `AZURE_OPENAI_API_KEY`    | Calls Azure OpenAI (GPT-4o)          |
 | `AZURE_OPENAI_ENDPOINT`   | Your Azure OpenAI resource URL       |
-| `AZURE_OPENAI_DEPLOYMENT` | The deployment name (model alias)    |
 
-## processes
+## workspaces
 
-| Folder                                                        | Order | What it does                                              |
-| ------------------------------------------------------------- | ----- | --------------------------------------------------------- |
-| [processes/support_routing/](processes/support_routing/)      | 01    | Classify inbound support emails into 5 routing categories |
-| _(more to follow)_                                            |       |                                                           |
+{workspaces_table}
 
-Folder names are plain Python identifiers (no leading digits) so they
-import cleanly. The presentation order lives in the table above.
+## adding a process to a workspace
 
-## shared
+See [docs/adding_a_process.md](docs/adding_a_process.md). The short version:
 
-| Module                                              | Responsibility                                       |
-| --------------------------------------------------- | ---------------------------------------------------- |
-| [shared/azure_openai.py](shared/azure_openai.py)    | Thin client wrapper, returns `(label, logprob)`      |
-| [shared/classification.py](shared/classification.py) | Threshold logic + label schema dataclasses           |
-
-If a helper appears twice across `processes/`, it gets promoted into
-`shared/`. Same rule `noxus-lab` applies between examples and the
-package.
-
-## how to add a process
-
-See [docs/adding_a_process.md](docs/adding_a_process.md). The short
-version:
-
-1. `cp -r processes/support_routing processes/<short_name>`
-2. Edit the local `README.md` with the process context
-3. Replace the label set, sample data, and prompt
-4. `pytest processes/<short_name>` — green before commit
-5. Add a row to the `processes` table above with the order column
+1. `cp -r <workspace>/<existing_process> <workspace>/<new_process>`
+2. Replace the labels in `labels.py` and the prompt
+3. Replace the fixtures under `test_fixtures/`
+4. `pytest <workspace>/<new_process>` — green before commit
+5. Add a row in this README
 
 ## verify
 
