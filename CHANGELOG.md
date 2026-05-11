@@ -5,6 +5,31 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **Examples** drop the redundant `base_url=os.environ.get("NOXUS_BACKEND_URL")`
+  argument: the SDK `Client` already reads `NOXUS_BACKEND_URL` from the
+  environment, so passing it explicitly was both a duplication and a
+  type-checker error (`str | None` vs `str`). All eight scripts now
+  construct the client with a single line.
+- **`examples/04_agent.py`** updated to the current `WorkflowTool` SDK
+  signature (`workflow_id=...`); the legacy `workflow={...}, name=...,
+  description=...` arguments were removed in a recent SDK release.
+- **`examples/08_chat.py`** renders `ChatMessage.parts` (the actual SDK
+  shape) instead of a non-existent `.content` attribute.
+- **`noxuslab --help`** description shortened and an epilog added so the
+  top-level help reads cleanly when run without a subcommand.
+- **`_load_agent_file`** now returns `Any` for the settings field instead
+  of `object`; the call sites (`agents.update` / `agents.create`) accept
+  the live `ConversationSettings` instance produced by the file without
+  an explicit cast. Removes two pyright errors.
+
+### Fixed
+- **`pyright`**: 22 type errors → 0. The drift between the SDK type
+  signatures and the example/CLI surface is fully resolved.
+- **`tests/test_fmt_portal.py`** uses `# type: ignore[assignment]` on the
+  fake handler's `headers` attribute (the real `BaseHTTPRequestHandler`
+  declares it as `Message[str, str]`, which we deliberately bypass).
+
 ## [0.10.0] — 2026-05-08
 
 ### Added
@@ -201,8 +226,8 @@ and [Semantic Versioning](https://semver.org/).
   style, AI assistants operating procedure (plan → subagents →
   edit → verify → commit → memory hygiene → when stuck).
 - Documentation, tests, and changelog scrubbed of motivational
-  language and name-dropping. `tests/test_godlike.py` renamed to
-  `tests/test_features.py`.
+  language and name-dropping. The legacy showcase test module was
+  renamed to `tests/test_features.py`.
 
 ## [0.5.0] — 2026-05-08
 

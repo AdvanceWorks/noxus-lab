@@ -15,10 +15,7 @@ from noxus_sdk.client import Client
 from noxus_sdk.resources.conversations import MessageRequest
 
 load_dotenv()
-c = Client(
-    api_key=os.environ["NOXUS_API_KEY"],
-    base_url=os.environ.get("NOXUS_BACKEND_URL"),
-)
+c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 
 agent_id = sys.argv[1] if len(sys.argv) > 1 else None
 
@@ -33,4 +30,5 @@ else:
     conv = c.conversations.create(name="demo-chat", settings=settings)
 
 reply = conv.chat(MessageRequest(content="Hello! What can you help me with?"))
-print(reply.content)
+for part in reply.parts:
+    print("-", part.get("type"), "::", str(part.get("content", ""))[:200])

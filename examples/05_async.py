@@ -16,10 +16,7 @@ from noxus_sdk.client import Client
 from noxus_sdk.resources.knowledge_bases import KBConfigV3
 
 load_dotenv()
-c = Client(
-    api_key=os.environ["NOXUS_API_KEY"],
-    base_url=os.environ.get("NOXUS_BACKEND_URL"),
-)
+c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 
 
 async def make(i):

@@ -14,10 +14,7 @@ from dotenv import load_dotenv
 from noxus_sdk.client import Client
 
 load_dotenv()
-c = Client(
-    api_key=os.environ["NOXUS_API_KEY"],
-    base_url=os.environ.get("NOXUS_BACKEND_URL"),
-)
+c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 
 print(f"# {len(c.nodes)} node types")
 for n in sorted({nd["name"] for nd in c.nodes if "name" in nd}):

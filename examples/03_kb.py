@@ -31,10 +31,7 @@ SAMPLE = (
 )
 
 load_dotenv()
-c = Client(
-    api_key=os.environ["NOXUS_API_KEY"],
-    base_url=os.environ.get("NOXUS_BACKEND_URL"),
-)
+c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 
 if len(sys.argv) > 1:
     doc = sys.argv[1]

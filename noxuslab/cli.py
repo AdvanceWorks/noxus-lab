@@ -22,6 +22,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -240,11 +241,14 @@ def cmd_agents_pull(args: argparse.Namespace) -> int:
     return 0
 
 
-def _load_agent_file(path: Path) -> tuple[str, object, str | None]:
-    """Load an agent file via the shared sandbox; return (name, settings, id?).
+def _load_agent_file(path: Path) -> tuple[str, Any, str | None]:
+    """Load an agent file in a stubbed namespace; return (name, settings, id?).
 
     The three module-level variables (`agent_name`, `agent_id`,
-    `agent_settings`) are the entire contract.
+    `agent_settings`) are the entire contract. `settings` is typed `Any`
+    because the file produces a live `ConversationSettings` instance from
+    the SDK; importing the type here would make the CLI eager-import the
+    SDK on every `--help`.
     """
     ns = LocalWorkflow.load(path).execute_namespace()
     name = ns.get("agent_name")
@@ -564,7 +568,11 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="noxuslab", description=__doc__)
+    p = argparse.ArgumentParser(
+        prog="noxuslab",
+        description="Workflow-as-code for Noxus AI: pull from the UI, edit, run, trace, push back.",
+        epilog="Run `noxuslab <command> --help` for details on each command.",
+    )
     p.add_argument("-V", "--version", action="version", version=f"noxuslab {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
 

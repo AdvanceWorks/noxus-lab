@@ -146,7 +146,7 @@ def test_handler_routes_overview(monkeypatch):
             self.path = "/"
             self.wfile = io.BytesIO()
             self.rfile = io.BytesIO()
-            self.headers = {}
+            self.headers = {}  # type: ignore[assignment]
 
         def send_response(self, code):
             captured["code"] = code
@@ -174,7 +174,7 @@ def test_handler_404_for_unknown_path():
             self.path = "/nope"
             self.wfile = io.BytesIO()
             self.rfile = io.BytesIO()
-            self.headers = {}
+            self.headers = {}  # type: ignore[assignment]
 
         def send_error(self, code, msg=None):
             captured["code"] = code

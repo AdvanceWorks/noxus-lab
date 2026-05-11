@@ -14,10 +14,7 @@ from noxus_sdk.client import Client
 from noxus_sdk.workflows import WorkflowDefinition
 
 load_dotenv()
-c = Client(
-    api_key=os.environ["NOXUS_API_KEY"],
-    base_url=os.environ.get("NOXUS_BACKEND_URL"),
-)
+c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 
 wf = WorkflowDefinition(name="hello-noxus-lab")
 inp = wf.node("InputNode").config(label="topic", type="str")

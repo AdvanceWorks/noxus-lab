@@ -19,9 +19,6 @@ if len(sys.argv) < 2:
     sys.exit("usage: python examples/07_pull_demo.py <workflow_id>")
 
 load_dotenv()
-c = Client(
-    api_key=os.environ["NOXUS_API_KEY"],
-    base_url=os.environ.get("NOXUS_BACKEND_URL"),
-)
+c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 wf = c.workflows.get(workflow_id=sys.argv[1])
 print(workflow_to_python(wf))

@@ -26,10 +26,7 @@ if len(sys.argv) < 2:
 wid = sys.argv[1]
 
 load_dotenv()
-c = Client(
-    api_key=os.environ["NOXUS_API_KEY"],
-    base_url=os.environ.get("NOXUS_BACKEND_URL"),
-)
+c = Client(api_key=os.environ["NOXUS_API_KEY"])  # SDK reads NOXUS_BACKEND_URL from env.
 
 agent = c.agents.create(
     name="noxus-lab-agent",
@@ -37,14 +34,7 @@ agent = c.agents.create(
         model=["gemini-2.5-flash-lite"],
         temperature=0.2,
         max_tokens=300,
-        tools=[
-            WorkflowTool(
-                enabled=True,
-                workflow={"id": wid, "name": "hello", "description": "Bullets generator."},
-                name="hello",
-                description="Generate three bullets about a topic.",
-            )
-        ],
+        tools=[WorkflowTool(enabled=True, workflow_id=wid)],
         extra_instructions="When asked for bullets on a topic, call the hello tool.",
     ),
 )
