@@ -1,4 +1,4 @@
-{
+{{
   "include": [{workspace_includes}, "conftest.py"],
   "exclude": [".venv", "build", "dist", "**/__pycache__", "**/test_fixtures"],
   "venvPath": ".",
@@ -7,4 +7,4 @@
   "typeCheckingMode": "basic",
   "reportMissingImports": "warning",
   "reportMissingTypeStubs": false
-}
+}}

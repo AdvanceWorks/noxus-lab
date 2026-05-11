@@ -144,7 +144,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     """
     target = Path(args.dir)
     if target.exists() and any(
-        item for item in target.iterdir() if item.name not in {".git", ".env"}
+        item for item in target.iterdir() if item.name not in {".git", ".env", ".venv"}
     ):
         raise BadFile(f"refusing to scaffold into non-empty {target}")
     target.mkdir(parents=True, exist_ok=True)
@@ -237,7 +237,7 @@ def _scaffold_multi_process(target: Path, workspaces: list[str] | None = None) -
         _copy_with_placeholders(process_template, proc_dest, workspace=workspace, process=process)
 
     # Render top-level `*.tpl` files now that we know the workspace set.
-    project_name = target.name
+    project_name = target.resolve().name
     workspace_packages = ", ".join(f'"{w}"' for w, _ in pairs)
     coverage_args = "\n".join(f'  "--cov={w}",' for w, _ in pairs)
     testpaths = ", ".join(f'"{w}"' for w, _ in pairs)

@@ -31,6 +31,9 @@ dev = [
   "pytest-mock>=3.12",
 ]
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = [{workspace_packages}]
 
