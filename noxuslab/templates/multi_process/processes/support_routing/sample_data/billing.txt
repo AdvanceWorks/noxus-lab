@@ -1,0 +1,12 @@
+From: alex.morgan@example.com
+To: support@yourcompany.com
+Subject: Invoice #4821 — wrong amount
+
+Hi team,
+
+The invoice we received for May (#4821) shows 1 200 EUR but our
+contract says 950 EUR/month. Can you check and reissue? PDF copy
+attached.
+
+Thanks,
+Alex

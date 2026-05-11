@@ -1,0 +1,27 @@
+line-length = 100
+target-version = "py310"
+
+[lint]
+select = [
+  "E", "F", "W",
+  "I",
+  "B",
+  "UP",
+  "SIM",
+  "S",
+  "RET",
+  "PTH",
+]
+ignore = [
+  "E501",
+  "S101",
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["S", "B011"]
+"processes/*/tests/**" = ["S", "B011"]
+"processes/*/sample_data/**" = ["E501"]
+"processes/*/workflows/**" = ["E402", "F401"]
+
+[format]
+quote-style = "double"

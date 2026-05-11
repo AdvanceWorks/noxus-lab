@@ -136,6 +136,9 @@ def _scaffold_readme(project_name: str) -> str:
 def cmd_init(args: argparse.Namespace) -> int:
     """Scaffold a new project under <dir> by copying examples + .env.example.
 
+    With `--multi-process`, scaffolds the multi-process repo layout
+    (shared/ + processes/<name>/) instead of the single-workflow one.
+
     With `--interactive` (or when stdin is a TTY), runs a short wizard that
     asks for the API key and writes a ready-to-use `.env`.
     """
@@ -143,6 +146,24 @@ def cmd_init(args: argparse.Namespace) -> int:
     if target.exists() and any(target.iterdir()):
         raise BadFile(f"refusing to scaffold into non-empty {target}")
     target.mkdir(parents=True, exist_ok=True)
+
+    if getattr(args, "multi_process", False):
+        _scaffold_multi_process(target)
+    else:
+        _scaffold_single(target)
+
+    interactive = args.interactive or (
+        args.interactive is None and sys.stdin.isatty() and sys.stdout.isatty()
+    )
+    if interactive:
+        _run_init_wizard(target)
+
+    print(target)
+    return 0
+
+
+def _scaffold_single(target: Path) -> None:
+    """Original single-workflow layout: examples/ + .env.example + README."""
     here = Path(__file__).resolve().parent.parent
     src_examples = here / "examples"
     if src_examples.is_dir():
@@ -154,14 +175,31 @@ def cmd_init(args: argparse.Namespace) -> int:
     (target / ".noxuslab-template-version").write_text(__version__ + "\n", encoding="utf-8")
     (target / "README.md").write_text(_scaffold_readme(target.name), encoding="utf-8")
 
-    interactive = args.interactive or (
-        args.interactive is None and sys.stdin.isatty() and sys.stdout.isatty()
-    )
-    if interactive:
-        _run_init_wizard(target)
 
-    print(target)
-    return 0
+def _scaffold_multi_process(target: Path) -> None:
+    """Multi-process layout: shared/ + processes/<name>/ + tests + docs.
+
+    Copies the bundled template tree, then renders any `*.tpl` file by
+    formatting it with `{project_name}` and `{version}` and removing
+    the `.tpl` suffix. Same template-version marker as the single layout.
+    """
+    src = Path(__file__).resolve().parent / "templates" / "multi_process"
+    if not src.is_dir():
+        raise BadFile(
+            f"multi-process template missing at {src}. Reinstall noxuslab from a complete checkout."
+        )
+    shutil.copytree(src, target, dirs_exist_ok=True)
+
+    project_name = target.name
+    for tpl in list(target.rglob("*.tpl")):
+        rendered = tpl.read_text(encoding="utf-8").format(
+            project_name=project_name,
+            version=__version__,
+        )
+        tpl.with_suffix("").write_text(rendered, encoding="utf-8")
+        tpl.unlink()
+
+    (target / ".noxuslab-template-version").write_text(__version__ + "\n", encoding="utf-8")
 
 
 def _run_init_wizard(target: Path) -> None:
@@ -597,6 +635,12 @@ def main(argv: list[str] | None = None) -> int:
 
     pi = sub.add_parser("init", help="scaffold a new project from this template")
     pi.add_argument("dir", help="target directory (must be empty or new)")
+    pi.add_argument(
+        "--multi-process",
+        action="store_true",
+        help="scaffold a multi-process repo (shared/ + processes/<name>/) "
+        "instead of the single-workflow layout",
+    )
     pi.add_argument(
         "--interactive",
         action=argparse.BooleanOptionalAction,

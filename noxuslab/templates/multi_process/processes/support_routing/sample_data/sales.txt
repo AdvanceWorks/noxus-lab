@@ -1,0 +1,12 @@
+From: pat.lee@example.com
+To: sales@yourcompany.com
+Subject: Pricing for 50 seats
+
+Hi,
+
+We are evaluating an upgrade from our current 10-seat plan to roughly
+50 seats. Could you share volume pricing and a comparison of the Pro
+vs Enterprise tiers? Happy to do a 30 min call this week.
+
+Best,
+Pat

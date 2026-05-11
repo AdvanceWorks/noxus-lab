@@ -1,0 +1,12 @@
+From: chris.k@example.com
+To: support@yourcompany.com
+Subject: Where do I find the API reference?
+
+Hi,
+
+I am onboarding our team and cannot find the API reference docs from
+the dashboard. Is there a direct link, or are they only in the PDF
+guide?
+
+Thanks!
+Chris

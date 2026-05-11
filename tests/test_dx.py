@@ -43,6 +43,41 @@ def test_init_refuses_non_empty(tmp_path: Path, capsys):
     assert "refusing" in capsys.readouterr().err
 
 
+def test_init_multi_process_scaffolds(tmp_path: Path):
+    target = tmp_path / "acme_processes"
+    rc = main(["init", "--multi-process", "--no-interactive", str(target)])
+    assert rc == 0
+    # Layout
+    assert (target / "shared" / "azure_openai.py").is_file()
+    assert (target / "shared" / "classification.py").is_file()
+    assert (target / "processes" / "support_routing" / "classifier.py").is_file()
+    assert (target / "processes" / "support_routing" / "labels.py").is_file()
+    assert (target / "processes" / "support_routing" / "tests" / "test_classifier.py").is_file()
+    assert (target / "processes" / "support_routing" / "sample_data" / "billing.txt").is_file()
+    assert (target / "tests" / "test_classification.py").is_file()
+    assert (target / "docs" / "architecture.md").is_file()
+    assert (target / ".github" / "workflows" / "ci.yml").is_file()
+    assert (target / ".env.example").is_file()
+    assert (target / ".noxuslab-template-version").is_file()
+    # Templates rendered + originals removed
+    assert (target / "README.md").is_file()
+    assert not (target / "README.md.tpl").exists()
+    assert (target / "pyproject.toml").is_file()
+    assert not (target / "pyproject.toml.tpl").exists()
+
+
+def test_init_multi_process_renders_template_vars(tmp_path: Path):
+    target = tmp_path / "acme_processes"
+    rc = main(["init", "--multi-process", "--no-interactive", str(target)])
+    assert rc == 0
+    pyproj = (target / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'name = "acme_processes"' in pyproj
+    readme = (target / "README.md").read_text(encoding="utf-8")
+    assert "# acme_processes" in readme
+    assert "{project_name}" not in readme
+    assert "{version}" not in readme
+
+
 def test_did_you_mean_hint(capsys):
     monkeypatch_argv = ["pul", "abc"]
     with pytest.raises(SystemExit):

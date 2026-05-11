@@ -5,6 +5,20 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **`noxuslab init --multi-process`** scaffolds a multi-process repo
+  layout (`shared/` cross-cutting helpers + `processes/<name>/` one
+  folder per automation) instead of the single-workflow examples
+  layout. The bundled example process `support_routing` ships with a
+  generic 5-label classifier (`billing`, `technical`, `sales`,
+  `general`, `other`), Azure OpenAI logprob-based confidence, a Noxus
+  workflow definition, sample data, offline tests, CI, pre-commit
+  hooks, and architecture docs — the same shape used in production by
+  the `noxus-ctt` repo, now reusable for any future client.
+- The new `noxuslab/templates/multi_process/` template tree is
+  bundled in the wheel via `[tool.hatch.build.targets.wheel.force-include]`
+  so the scaffold works after `pip install`, not only from a checkout.
+
 ### Changed
 - **Examples** drop the redundant `base_url=os.environ.get("NOXUS_BACKEND_URL")`
   argument: the SDK `Client` already reads `NOXUS_BACKEND_URL` from the

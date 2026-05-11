@@ -52,6 +52,26 @@ Issues = "https://github.com/AdvanceWorks/noxus-lab/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["noxuslab"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"noxuslab/templates" = "noxuslab/templates"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "noxuslab/**",
+  "examples/**",
+  "tests/**",
+  "docs/**",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "SECURITY.md",
+  "AGENTS.md",
+  "pyproject.toml",
+  "ruff.toml",
+  "pyrightconfig.json",
+  ".env.example",
+]
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = [
