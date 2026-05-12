@@ -99,6 +99,89 @@ def test_push_rejects_missing_file(tmp_path: Path, monkeypatch):
     assert rc == 1
 
 
+def _push_fixture_file(tmp_path: Path, name: str = "demo") -> Path:
+    """Write a minimal flow file whose `wf` carries `name`."""
+    f = tmp_path / "flow.py"
+    f.write_text(
+        f"class W:\n    name = {name!r}\n    nodes = []\n    edges = []\nwf = W()\n",
+        encoding="utf-8",
+    )
+    return f
+
+
+def test_push_updates_existing_workflow_by_name(tmp_path, monkeypatch, capsys):
+    """Re-pushing a file with the same `wf.name` MUST update, not duplicate."""
+    monkeypatch.chdir(tmp_path)
+    f = _push_fixture_file(tmp_path, name="demo")
+
+    saves: list = []
+    updates: list = []
+
+    class FakeWf:
+        def __init__(self, wid: str, wname: str):
+            self.id = wid
+            self.name = wname
+
+    class FakeWorkflows:
+        def list(self, page_size: int = 100):  # noqa: ARG002
+            return [FakeWf("existing-id", "demo")]
+
+        def save(self, wf):
+            saves.append(wf)
+            return FakeWf("new-id", wf.name)
+
+        def update(self, wid, wf, force=False):  # noqa: ARG002
+            updates.append((wid, wf))
+            return FakeWf(wid, wf.name)
+
+    class FakeClient:
+        workflows = FakeWorkflows()
+
+    from noxuslab import cli
+
+    monkeypatch.setattr(cli, "_client", lambda: FakeClient())
+    rc = main(["push", str(f)])
+    assert rc == 0
+    assert updates and updates[0][0] == "existing-id", "must call update on existing"
+    assert not saves, "must not call save when a workflow with that name exists"
+    assert "existing-id" in capsys.readouterr().out
+
+
+def test_push_creates_when_no_workflow_with_that_name(tmp_path, monkeypatch, capsys):
+    """First push of a brand-new workflow falls back to save()."""
+    monkeypatch.chdir(tmp_path)
+    f = _push_fixture_file(tmp_path, name="brand-new")
+
+    class FakeWf:
+        def __init__(self, wid: str, wname: str):
+            self.id = wid
+            self.name = wname
+
+    saves: list = []
+
+    class FakeWorkflows:
+        def list(self, page_size: int = 100):  # noqa: ARG002
+            return [FakeWf("other-id", "something-else")]
+
+        def save(self, wf):
+            saves.append(wf)
+            return FakeWf("created-id", wf.name)
+
+        def update(self, *_args, **_kwargs):  # pragma: no cover - guard
+            raise AssertionError("update must not be called when no name match")
+
+    class FakeClient:
+        workflows = FakeWorkflows()
+
+    from noxuslab import cli
+
+    monkeypatch.setattr(cli, "_client", lambda: FakeClient())
+    rc = main(["push", str(f)])
+    assert rc == 0
+    assert len(saves) == 1
+    assert "created-id" in capsys.readouterr().out
+
+
 def test_diff_rejects_missing_file(tmp_path: Path):
     rc = main(["diff", "11111111-2222-3333-4444-555555555555", str(tmp_path / "ghost.py")])
     assert rc == 1

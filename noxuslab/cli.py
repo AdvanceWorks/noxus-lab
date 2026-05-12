@@ -93,7 +93,29 @@ def cmd_push(args: argparse.Namespace) -> int:
         print(f"ok: {nodes} nodes, {edges} edges")
         return 0
     client = _client()
-    print(net_call(lambda: client.workflows.save(wf).id, what="push workflow"))
+    # Look up by name first: `workflows.save` always creates a new
+    # workflow, so re-pushing the same file would otherwise duplicate
+    # it on every run. If a workflow with the same name already
+    # exists, update it in place; only fall back to save() for the
+    # initial create.
+    existing = next(
+        (
+            w
+            for w in net_call(
+                lambda: list(client.workflows.list(page_size=100)), what="list workflows"
+            )
+            if w.name == wf.name
+        ),
+        None,
+    )
+    if existing is not None:
+        net_call(
+            lambda: client.workflows.update(existing.id, wf, force=True),
+            what="update workflow",
+        )
+        print(existing.id)
+    else:
+        print(net_call(lambda: client.workflows.save(wf).id, what="push workflow"))
     return 0
 
 
