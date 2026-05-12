@@ -75,12 +75,52 @@ def cmd_pull(args: argparse.Namespace) -> int:
         sys.stdout.write(code)
         return 0
     out = Path(args.out) if args.out else _next_example_path(_slug(wf.name))
-    if out.exists() and not args.force:
-        raise BadFile(f"refusing to overwrite {out} (use --force)")
     out.parent.mkdir(parents=True, exist_ok=True)
+    if out.exists():
+        from noxuslab.codegen import SENTINEL_BEGIN, SENTINEL_END, splice_generated
+
+        existing = out.read_text(encoding="utf-8")
+        has_sentinels = SENTINEL_BEGIN in existing and SENTINEL_END in existing
+        if has_sentinels and not args.regen:
+            # Safe re-pull: replace the sentinel region only; keep user
+            # imports/helpers/comments outside the sentinels intact.
+            code = splice_generated(existing, code)
+        elif not args.force and not args.regen:
+            raise BadFile(
+                f"refusing to overwrite {out} "
+                "(use --regen to fully replace, or --force for non-sentinel files)"
+            )
     out.write_text(code, encoding="utf-8")
+    _format_with_ruff(out)
     print(out)
     return 0
+
+
+def _format_with_ruff(path: Path) -> None:
+    """Run `ruff format` on `path` if ruff is on PATH; ignore failures.
+
+    Pulled files should be ready to commit, so we shape them through the
+    same formatter the rest of the project uses. Silent best-effort: a
+    missing or broken ruff binary must never break `noxuslab pull`.
+    """
+    import subprocess
+
+    ruff = shutil.which("ruff")
+    if not ruff:
+        return
+    with contextlib.suppress(Exception):
+        subprocess.run(  # noqa: S603 -- ruff path resolved by shutil.which
+            [ruff, "format", "--quiet", str(path)],
+            check=False,
+            capture_output=True,
+            timeout=10,
+        )
+        subprocess.run(  # noqa: S603 -- ruff path resolved by shutil.which
+            [ruff, "check", "--fix", "--quiet", "--select", "I", str(path)],
+            check=False,
+            capture_output=True,
+            timeout=10,
+        )
 
 
 def cmd_push(args: argparse.Namespace) -> int:
@@ -717,7 +757,17 @@ def main(argv: list[str] | None = None) -> int:
     pp = sub.add_parser("pull", help="fetch a workflow and emit a Python file")
     pp.add_argument("workflow_id")
     pp.add_argument("-o", "--out", help="output path; '-' for stdout")
-    pp.add_argument("-f", "--force", action="store_true", help="overwrite existing file")
+    pp.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="overwrite an existing file that has no noxuslab sentinels",
+    )
+    pp.add_argument(
+        "--regen",
+        action="store_true",
+        help="regenerate the file fully, discarding user code outside the sentinels",
+    )
     pp.set_defaults(func=cmd_pull)
 
     ph = sub.add_parser("push", help="save a workflow defined in a Python file")

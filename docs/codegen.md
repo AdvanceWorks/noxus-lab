@@ -30,6 +30,23 @@ code-defined workflow back to your workspace.
    readable.
 7. The header includes a docstring, `dotenv` load, `Client` setup, and
    a final `print(c.workflows.save(wf).id)`.
+8. The whole regenerable region (`WorkflowDefinition` constructor +
+   nodes + edges + final `save` line) is wrapped between sentinel
+   comments:
+   ```python
+   # >>> noxuslab:generated >>>
+   ...
+   # <<< noxuslab:generated <<<
+   ```
+   On a re-pull the splice replaces only what's between the sentinels;
+   any user code outside (extra imports, helper functions, custom
+   blocks, comments) is preserved. See
+   `noxuslab.codegen.splice_generated` for the splice logic and
+   `noxuslab fmt` for the canonicalisation pass.
+9. Each node block carries a section comment (`# --- <title>
+   (<NodeType>) ---`) and emits `node.name = "<title>"` when a display
+   title is set, so re-pushing the file keeps the descriptive names
+   visible in the Noxus UI.
 
 ## Round-tripping
 

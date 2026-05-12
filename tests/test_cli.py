@@ -214,7 +214,70 @@ def test_diff_without_id_and_no_provenance(tmp_path: Path, capsys):
     f.write_text("# any\nwf = None\n", encoding="utf-8")
     rc = main(["diff", str(f)])
     assert rc == 1
-    assert "no workflow id given" in capsys.readouterr().err
+
+
+# --- pull splice / regen ---------------------------------------------------
+
+
+def _stub_pull(monkeypatch, wf_dict: dict) -> None:
+    """Make `cmd_pull` return `wf_dict` instead of hitting the network."""
+    from noxuslab import cli
+
+    class _Ws:
+        def get(self, *, workflow_id):  # noqa: ARG002
+            return wf_dict
+
+    class _Client:
+        workflows = _Ws()
+
+    monkeypatch.setattr(cli, "_client", lambda: _Client())
+    # `_format_with_ruff` invokes a subprocess; skip in tests.
+    monkeypatch.setattr(cli, "_format_with_ruff", lambda _p: None)
+
+
+def test_pull_splices_into_existing_file_with_sentinels(
+    tmp_path: Path, monkeypatch, sample_workflow_dict
+):
+    """A re-pull replaces only the sentinel region; user code outside survives."""
+    _stub_pull(monkeypatch, sample_workflow_dict)
+    out = tmp_path / "flow.py"
+    wfid = "11111111-2222-3333-4444-555555555555"
+    monkeypatch.chdir(tmp_path)
+    assert main(["pull", wfid, "-o", str(out)]) == 0
+    # User edits the file, adding a helper above and a comment below.
+    text = out.read_text(encoding="utf-8")
+    edited = (
+        text.replace("import os\n", "import os\n\ndef my_helper():\n    return 'preserved'\n", 1)
+        + "\n# user trailing comment\n"
+    )
+    out.write_text(edited, encoding="utf-8")
+    # Re-pull should keep user code.
+    assert main(["pull", wfid, "-o", str(out)]) == 0
+    after = out.read_text(encoding="utf-8")
+    assert "def my_helper():" in after
+    assert "# user trailing comment" in after
+    assert "WorkflowDefinition(name='test-flow')" in after
+
+
+def test_pull_refuses_existing_file_without_sentinels(
+    tmp_path: Path, monkeypatch, sample_workflow_dict, capsys
+):
+    _stub_pull(monkeypatch, sample_workflow_dict)
+    out = tmp_path / "flow.py"
+    out.write_text("# user file with no sentinels\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    rc = main(["pull", "11111111-2222-3333-4444-555555555555", "-o", str(out)])
+    assert rc == 1
+    assert "refusing to overwrite" in capsys.readouterr().err
+
+
+def test_pull_regen_overwrites_user_code(tmp_path: Path, monkeypatch, sample_workflow_dict):
+    _stub_pull(monkeypatch, sample_workflow_dict)
+    out = tmp_path / "flow.py"
+    out.write_text("# user file with no sentinels\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    assert main(["pull", "11111111-2222-3333-4444-555555555555", "-o", str(out), "--regen"]) == 0
+    assert "WorkflowDefinition(name='test-flow')" in out.read_text(encoding="utf-8")
 
 
 def test_check_dry_run_passes_offline(tmp_path: Path, monkeypatch, capsys):

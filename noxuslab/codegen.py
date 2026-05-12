@@ -19,6 +19,34 @@ from typing import Any
 CONFIG_INLINE_LIMIT = 80
 """Above this many chars (repr length) a config value is hoisted to a top var."""
 
+SENTINEL_BEGIN = "# >>> noxuslab:generated >>>"
+SENTINEL_END = "# <<< noxuslab:generated <<<"
+"""Markers around the auto-regenerable region. Anything inside these
+sentinels is replaced verbatim by `noxuslab pull` on subsequent runs;
+anything **outside** them (custom imports, helper functions, comments,
+hand-written code) is preserved. Splice logic lives in
+`noxuslab.codegen.splice_generated`.
+"""
+
+
+def splice_generated(existing: str, regenerated: str) -> str:
+    """Replace the sentinel region in `existing` with the one from `regenerated`.
+
+    If either text lacks both sentinels, returns `regenerated` verbatim
+    (the splice is unsafe). Otherwise returns
+    ``existing[:begin] + regenerated[begin:end] + existing[end:]`` so the
+    user's edits outside the sentinels survive a re-pull.
+    """
+    if SENTINEL_BEGIN not in existing or SENTINEL_END not in existing:
+        return regenerated
+    if SENTINEL_BEGIN not in regenerated or SENTINEL_END not in regenerated:
+        return regenerated
+    e_b = existing.index(SENTINEL_BEGIN)
+    e_e = existing.index(SENTINEL_END) + len(SENTINEL_END)
+    r_b = regenerated.index(SENTINEL_BEGIN)
+    r_e = regenerated.index(SENTINEL_END) + len(SENTINEL_END)
+    return existing[:e_b] + regenerated[r_b:r_e] + existing[e_e:]
+
 
 def _slug(name: str) -> str:
     s = re.sub(r"[^a-zA-Z0-9]+", "_", name).strip("_").lower()
@@ -132,12 +160,19 @@ def workflow_to_python(
         kwargs = _config_kwargs(n.get("node_config", {}), hoisted, node_dropped)
         if node_dropped:
             dropped[name_of[nid]] = node_dropped
+        title = (n.get("name") or "").strip()
+        header = f"# --- {title} ({n['type']}) ---" if title else f"# --- {n['type']} ---"
+        body.append(header)
         if kwargs:
             body.append(f'{name_of[nid]} = {var}.node("{n["type"]}").config({kwargs})')
         else:
             body.append(f'{name_of[nid]} = {var}.node("{n["type"]}")')
-
-    body.append("")
+        # Render the display title so re-pushed files keep the UI labels.
+        # Always emitted when a name is set; if it equals the SDK default
+        # the assignment is a harmless no-op and avoids brittle defaults.
+        if title:
+            body.append(f"{name_of[nid]}.name = {_py(title)}")
+        body.append("")
 
     for e in edges_sorted:
         src = e["from_id"]
@@ -184,8 +219,11 @@ def workflow_to_python(
     if hoisted:
         pieces.append("\n".join(f"{k} = {v}" for k, v in hoisted.items()) + "\n")
 
-    pieces.append(f"{var} = WorkflowDefinition(name={_py(name)})\n")
-    pieces.append("\n".join(body))
+    # Sentinel-wrapped block: `noxuslab pull` may regenerate everything
+    # between these markers; user-written code outside survives.
+    gen_block: list[str] = [SENTINEL_BEGIN]
+    gen_block.append(f"{var} = WorkflowDefinition(name={_py(name)})\n")
+    gen_block.append("\n".join(body))
 
     if dropped:
         notes = []
@@ -193,10 +231,12 @@ def workflow_to_python(
             notes.append(
                 f"# noxuslab: dropped non-renderable config key(s) on {var_name}: {', '.join(repr(k) for k in keys)}"
             )
-        pieces.append("\n".join(notes) + "\n")
+        gen_block.append("\n".join(notes) + "\n")
 
     if runnable:
-        pieces.append(f"\nprint(c.workflows.save({var}).id)\n")
+        gen_block.append(f"\nprint(c.workflows.save({var}).id)\n")
+    gen_block.append(SENTINEL_END)
+    pieces.append("\n".join(p.rstrip() for p in gen_block if p) + "\n")
 
     text = "\n".join(p.rstrip() for p in pieces if p) + "\n"
     return re.sub(r"\n{3,}", "\n\n", text)

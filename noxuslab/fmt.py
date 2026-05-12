@@ -22,15 +22,21 @@ import sys
 from pathlib import Path
 
 from noxuslab._workflow import LocalWorkflow
-from noxuslab.codegen import workflow_to_python
+from noxuslab.codegen import splice_generated, workflow_to_python
 from noxuslab.errors import BadFile
 
 
 def _canonical(path: Path) -> tuple[str, str]:
-    """Return (current_source, canonical_source) for the file."""
+    """Return (current_source, canonical_source) for the file.
+
+    If the file already contains the noxuslab sentinels, only the
+    sentinel region is canonicalised; user code outside the sentinels is
+    preserved (same contract as `noxuslab pull` re-runs).
+    """
     lw = LocalWorkflow.load(path)
     wf = lw.execute()
-    canonical = workflow_to_python(wf, source_id=lw.provenance_id)
+    regenerated = workflow_to_python(wf, source_id=lw.provenance_id)
+    canonical = splice_generated(lw.text, regenerated)
     return lw.text, canonical
 
 

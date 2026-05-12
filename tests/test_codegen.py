@@ -1,6 +1,13 @@
 """Tests for `noxuslab.codegen.workflow_to_python` (offline)."""
 
-from noxuslab.codegen import _slug, _topo_order, workflow_to_python
+from noxuslab.codegen import (
+    SENTINEL_BEGIN,
+    SENTINEL_END,
+    _slug,
+    _topo_order,
+    splice_generated,
+    workflow_to_python,
+)
 
 
 def test_slug():
@@ -93,3 +100,95 @@ def test_deterministic_output(sample_workflow_dict):
     a = workflow_to_python(sample_workflow_dict, source_id=None)
     b = workflow_to_python(sample_workflow_dict, source_id=None)
     assert a == b
+
+
+def test_emits_sentinels(sample_workflow_dict):
+    code = workflow_to_python(sample_workflow_dict)
+    assert SENTINEL_BEGIN in code
+    assert SENTINEL_END in code
+    assert code.index(SENTINEL_BEGIN) < code.index(SENTINEL_END)
+
+
+def test_section_comments_use_node_titles(sample_workflow_dict):
+    code = workflow_to_python(sample_workflow_dict)
+    # Sample workflow has nodes named "Input", "Gen", "Out".
+    assert "# --- Input (InputNode) ---" in code
+    assert "# --- Gen (TextGenerationNode) ---" in code
+    assert "# --- Out (OutputNode) ---" in code
+
+
+def test_renders_node_name_when_set():
+    """A node title is emitted as `n.name = "..."` so re-push keeps UI labels."""
+    wf_dict = {
+        "name": "wf",
+        "definition": {
+            "nodes": [
+                {
+                    "type": "CodeExecutionV3Node",
+                    "id": "a",
+                    "name": "Gate: Filter by Label",
+                    "node_config": {},
+                },
+            ],
+            "edges": [],
+        },
+    }
+    code = workflow_to_python(wf_dict)
+    assert "n0.name = 'Gate: Filter by Label'" in code
+
+
+def test_omits_node_name_when_empty():
+    wf_dict = {
+        "name": "wf",
+        "definition": {
+            "nodes": [
+                {
+                    "type": "CodeExecutionV3Node",
+                    "id": "a",
+                    "name": "",
+                    "node_config": {},
+                },
+            ],
+            "edges": [],
+        },
+    }
+    code = workflow_to_python(wf_dict)
+    assert "n0.name" not in code
+
+
+def test_splice_preserves_user_code_outside_sentinels():
+    existing = (
+        "import os\n"
+        "\n"
+        "# my custom helper\n"
+        "def helper():\n"
+        "    return 42\n"
+        "\n"
+        f"{SENTINEL_BEGIN}\n"
+        "OLD_BODY\n"
+        f"{SENTINEL_END}\n"
+        "\n"
+        "# user trailing code\n"
+        "print(helper())\n"
+    )
+    regenerated = (
+        "# generated stuff above\n"
+        f"{SENTINEL_BEGIN}\n"
+        "NEW_BODY\n"
+        f"{SENTINEL_END}\n"
+        "# generated stuff below\n"
+    )
+    out = splice_generated(existing, regenerated)
+    assert "def helper()" in out
+    assert "print(helper())" in out
+    assert "NEW_BODY" in out
+    assert "OLD_BODY" not in out
+    # The header/footer of `regenerated` should NOT leak into the splice.
+    assert "# generated stuff above" not in out
+    assert "# generated stuff below" not in out
+
+
+def test_splice_falls_back_to_full_overwrite_when_no_sentinels():
+    existing = "raw user file with no sentinels\n"
+    regenerated = f"{SENTINEL_BEGIN}\nBODY\n{SENTINEL_END}\n"
+    assert splice_generated(existing, regenerated) == regenerated
