@@ -6,9 +6,20 @@ The package itself is intentionally tiny. Public surface:
   `WorkflowDefinition` as a self-contained Python script.
 - `noxuslab.cli.main()` — the `noxuslab` CLI (`pull`, `push`, `diff`,
   `chat`, `ask`, `list`, `agents`, `show`, `init`, `version`).
+- `noxuslab.helpers.push_workflow(wf)` — push a workflow to the Noxus AI
+  server.
+- `noxuslab.helpers.find_workflow_id_by_name(name)` — find a workflow
+  by name.
 
 Everything pedagogical lives under `examples/` at the repo root and is
 deliberately kept terse and free of `noxuslab` imports.
 """
 
 __version__ = "0.12.0"
+
+from .helpers.workflow import find_workflow_id_by_name, push_workflow
+
+__all__ = [
+    "find_workflow_id_by_name",
+    "push_workflow",
+]
