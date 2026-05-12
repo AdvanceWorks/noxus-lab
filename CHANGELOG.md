@@ -5,6 +5,28 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **`noxuslab push <file>` no longer duplicates a workflow on every
+  call.** Before, the command always called `client.workflows.save(wf)`
+  (which is unconditionally `POST /v1/workflows`), so re-pushing the
+  same file created a fresh workflow each time and the UI filled up
+  with copies. `cmd_push` now looks the workflow up by name first; if
+  one already exists with that name it calls
+  `client.workflows.update(id, wf, force=True)`, otherwise it falls
+  back to `save()`. Idempotent re-push is now the default.
+- **`templates/multi_process/.env.example`** — the placeholder
+  `NOXUS_BACKEND_URL` was `https://backend.noxus.ai`, which now
+  returns 401 on `/v1/nodes` (the live API host is
+  `https://api.app.noxus.ai`). Replaced with the working URL.
+
+### Added
+- **`OPENAI_API_KEY` placeholder in the multi_process `.env.example`.**
+  Anyone implementing a logprob-based classifier inside a Noxus
+  workflow has to reach an LLM that exposes token logprobs (the
+  built-in `CategorizerNode` does not). The `.env.example` now
+  documents the same key as a workspace secret in the Noxus UI, with
+  a short comment so it is not just dead config.
+
 ### Removed
 - **`NOXUSLAB_TOKEN` plumbing in the bundled `multi_process` CI
   template.** `noxus-lab` is now a public repository, so consumers can
