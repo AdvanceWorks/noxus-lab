@@ -5,6 +5,20 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **`noxuslab.testing.exec_code_node(template, inputs)`** — shared
+  helper that exec's a `CodeExecutionV3Node` template string into an
+  isolated namespace and calls its `main(inputs)`. Downstream repos
+  (e.g. `noxus-ctt`) were re-implementing this dance manually in
+  every test file. Promoting it here means the same string the Noxus
+  platform runs is what the offline test exercises, with one import.
+- **`templates/multi_process/AGENTS.md.tpl`** — scaffolded repos now
+  ship with an `AGENTS.md` recording the rules every contributor
+  (human or LLM) follows. Renders the workspaces table and project
+  name like the other top-level `*.tpl` files. Points at the lab's
+  own AGENTS.md for the broader philosophy; records only the
+  scaffolded-repo specifics.
+
 ### Fixed
 - **`noxuslab push <file>` no longer duplicates a workflow on every
   call.** Before, the command always called `client.workflows.save(wf)`

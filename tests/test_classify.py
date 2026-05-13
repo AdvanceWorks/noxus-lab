@@ -13,7 +13,7 @@ from noxuslab.classify import (
     _required,
     decide,
 )
-from noxuslab.testing import make_fake_azure_client
+from noxuslab.testing import exec_code_node, make_fake_azure_client
 
 
 def _score(label: str, prob: float) -> TokenScore:
@@ -81,3 +81,40 @@ def test_make_fake_azure_client_returns_label_and_logprob() -> None:
     assert response.choices[0].message.content == "vacation"
     logprob = response.choices[0].logprobs.content[0].logprob
     assert pytest.approx(math.exp(logprob), rel=1e-6) == 0.9
+
+
+# ---------------------------------------------------------------------------
+# exec_code_node — offline runner for CodeExecutionV3Node templates
+# ---------------------------------------------------------------------------
+
+
+def test_exec_code_node_runs_main_with_inputs() -> None:
+    code = "def main(inputs):\n    return {'echo': inputs['x'] + '!'}\n"
+    assert exec_code_node(code, {"x": "hi"}) == {"echo": "hi!"}
+
+
+def test_exec_code_node_supports_imports_and_stdlib() -> None:
+    code = (
+        "import json\n"
+        "def main(inputs):\n"
+        "    payload = json.loads(inputs['raw'])\n"
+        "    return {'len': str(len(payload))}\n"
+    )
+    assert exec_code_node(code, {"raw": "[1, 2, 3]"}) == {"len": "3"}
+
+
+def test_exec_code_node_isolates_namespaces_between_calls() -> None:
+    code = (
+        "_state = []\n"
+        "def main(inputs):\n"
+        "    _state.append(inputs['v'])\n"
+        "    return {'count': str(len(_state))}\n"
+    )
+    # Two separate calls => two fresh namespaces => no state leak.
+    assert exec_code_node(code, {"v": 1}) == {"count": "1"}
+    assert exec_code_node(code, {"v": 2}) == {"count": "1"}
+
+
+def test_exec_code_node_missing_main_raises_keyerror() -> None:
+    with pytest.raises(KeyError, match="main"):
+        exec_code_node("x = 1\n", {})
