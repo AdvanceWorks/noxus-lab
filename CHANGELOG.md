@@ -5,6 +5,8 @@ and [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-05-13
+
 ### Added
 - **`noxuslab.testing.exec_code_node(template, inputs)`** — shared
   helper that exec's a `CodeExecutionV3Node` template string into an
