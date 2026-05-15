@@ -17,7 +17,6 @@ import argparse
 import contextlib
 import difflib
 import json
-import os
 import re
 import shutil
 import sys
@@ -45,15 +44,9 @@ EXAMPLES_DIR = Path("examples")
 
 
 def _client():
-    from noxus_sdk.client import Client
+    from noxuslab.helpers.client import make_client
 
-    from noxuslab._secrets import resolve_api_key
-
-    kwargs: dict = {"api_key": resolve_api_key()}
-    url = os.environ.get("NOXUS_BACKEND_URL")
-    if url:
-        kwargs["base_url"] = url
-    return Client(**kwargs)
+    return make_client()
 
 
 def _next_example_path(name_slug: str) -> Path:

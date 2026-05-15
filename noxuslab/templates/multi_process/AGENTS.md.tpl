@@ -27,7 +27,8 @@ Workspaces in this repo:
 - **English only.** Comments, docstrings, identifiers, commit messages.
 - **No secrets in git.** `.env` is gitignored; `.env.example` is the
   template. Add new entries to both, with a placeholder value in the
-  example.
+  example. For multi-tenant deploys see
+  [docs/environments.md](docs/environments.md).
 - **Idempotent pushes.** Every `wf.run`-able script ends with a call
   to `noxuslab.push_workflow(client, wf)` — never
   `client.workflows.save(wf)` directly. The helper updates in place if

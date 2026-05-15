@@ -1,0 +1,79 @@
+name: deploy
+
+# Two-environment deploy pipeline. Pushes workflow definitions to a
+# Noxus tenant. The tenant (staging vs production) is selected by
+# GitHub Environment, not by branch — the same commit can be deployed
+# to staging on merge and promoted to production by tagging it.
+#
+# Triggers:
+#   - push to main          -> staging  (auto, no approval)
+#   - tag matching v*.*.*   -> production (requires environment approval)
+#   - workflow_dispatch     -> manual escape hatch for either env
+#
+# Each environment must define these secrets in repo Settings ->
+# Environments:
+#   NOXUS_API_KEY        — API key for that tenant
+#   NOXUS_BACKEND_URL    — base URL for that tenant
+#   OPENAI_API_KEY       — only if your deploy script needs it
+#
+# Rollback: re-tag a previous good commit. push_workflow is idempotent
+# (it updates in place by name), so re-pushing the older definition
+# replaces the live one without changing workflow IDs.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serialise deploys per environment; cancel superseded pushes on main
+  # but never cancel a tag-driven prod deploy mid-flight.
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
+
+jobs:
+  pick-env:
+    runs-on: ubuntu-latest
+    outputs:
+      env: ${{ steps.pick.outputs.env }}
+    steps:
+      - id: pick
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "env=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "env=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "env=staging" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: pick-env
+    runs-on: ubuntu-latest
+    environment: ${{ needs.pick-env.outputs.env }}
+    env:
+      NOXUS_API_KEY: ${{ secrets.NOXUS_API_KEY }}
+      NOXUS_BACKEND_URL: ${{ secrets.NOXUS_BACKEND_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: deploy workflows
+        run: python scripts/deploy.py
+      - name: summary
+        run: |
+          echo "Deployed to **${{ needs.pick-env.outputs.env }}** from \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
